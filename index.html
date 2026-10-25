@@ -303,7 +303,8 @@ body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helv
 /* ── PROJECT PAGE ── */
 .project-header { background: white; border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
 .dark .project-header { background: var(--gray-800); }
-.ph-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.ph-top { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 16px; }
+.ph-top .ph-info { flex: 1 1 160px; min-width: 0; }
 .ph-icon { width: 52px; height: 52px; border-radius: 12px; background: var(--blue-50); color: var(--blue-700); display: flex; align-items: center; justify-content: center; flex: none; }
 .ph-info { flex: 1; }
 .ph-name { font-size: 22px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
@@ -783,6 +784,12 @@ a.so-link:hover { text-decoration: underline; }
 .so-fr { padding: 8px 0; border-top: 1px solid var(--gray-200); display: flex; flex-direction: column; gap: 3px; }
 .so-fr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .so-total { font-size: 12px; color: var(--gray-400); margin-top: 10px; }
+
+.imp-fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-top: 1px solid var(--gray-200); }
+.imp-t { flex: 1 1 200px; } .imp-t b { display: block; font-size: 14px; } .imp-t small { color: var(--gray-600); font-size: 12px; }
+.imp-c { display: flex; gap: 8px; flex: 1 1 260px; justify-content: flex-end; flex-wrap: wrap; }
+.imp-c select { flex: 1 1 160px; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; background: white; color: var(--gray-900); font-family: inherit; }
+.dark .imp-c select { background: var(--gray-800); color: var(--gray-100); border-color: var(--gray-600); }
 </style>
 <body>
 
@@ -927,7 +934,7 @@ a.so-link:hover { text-decoration: underline; }
       <button class="topbar-btn btn-app" id="btn-app" onclick="installApp()" title="Instalar la app en este dispositivo"><span data-i="download" data-z="15"></span>Descargar app</button>
       <button class="topbar-btn btn-cloud" onclick="syncUp()"><span data-i="upload" data-z="15"></span>Subir</button>
       <button class="topbar-btn btn-save" onclick="saveLocal()"><span data-i="save" data-z="15"></span>Guardar</button>
-      <button class="topbar-btn btn-icon" onclick="printReport()" title="Imprimir reporte"><span data-i="print" data-z="16"></span></button>
+      <button class="topbar-btn btn-icon" onclick="impMenu()" title="Imprimir o guardar en PDF"><span data-i="print" data-z="16"></span></button>
     </div>
     <div class="content" id="page-content"></div>
   </div>
@@ -2443,6 +2450,7 @@ function renderModule(id) {
         <div class="ph-name">${escHtml(m.name)}</div>
         <div class="ph-desc">${escHtml(m.desc || '—')}</div>
       </div>
+      <button class="edit-btn" onclick="impProyecto('${m.id}')" title="Imprimir el informe de este proyecto">🖨 Imprimir</button>
       <button class="edit-btn" onclick="openEditModule('${m.id}')">✏️ Editar</button>
     </div>
     <div class="ph-meta">
@@ -3228,6 +3236,7 @@ function embOpen(id, etapaForzada) {
     <div class="modal-field"><label>Notas</label><textarea id="emb-notas" rows="3">${escHtml(p ? p.notas : '')}</textarea></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      ${p ? `<button class="btn-cancel" type="button" onclick="impEmpresa('${embAttr(p.id)}')" title="Imprimir o guardar en PDF la ficha de esta empresa">🖨 Imprimir ficha</button>` : ''}
       <button class="btn-confirm" onclick="embSave()">Guardar</button>
     </div>
     ${p ? `<button class="emb-del" id="emb-del" onclick="embDelete()">Eliminar prospecto</button>` : ''}
@@ -3998,7 +4007,7 @@ function printReport() {
     .alta{background:#FEE2E2;color:#991B1B;} .media{background:#FEF3C7;color:#92400E;} .baja{background:#D1FAE5;color:#065F46;}
   </style></head><body>
   <h1>Atocha · Reporte Estratégico</h1>
-  <div class="meta">${state.company} · ${state.tagline} · Generado: ${today}</div>
+  <div class="meta">${escHtml(state.company)} · ${escHtml(state.tagline || '')} · Generado: ${today}</div>
   <div class="meta">Meta total: ${fmtCOP(state.metaTotal)}</div>`;
 
   state.modules.forEach(m => {
@@ -4006,7 +4015,7 @@ function printReport() {
     if (!m.tasks.length) { html += `<p style="font-size:12px;color:#999">Sin tareas registradas.</p>`; return; }
     html += `<table><tr><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th><th>Cumplida</th></tr>`;
     m.tasks.forEach(t => {
-      html += `<tr><td>${t.name}</td><td>${t.date ? formatDate(t.date) : '—'}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
+      html += `<tr><td>${escHtml(t.name)}</td><td>${t.date ? formatDate(t.date) : '—'}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
         <td class="${t.done?'done':'pending'}">${t.done?'✅ Cumplida':'⏳ Pendiente'}</td>
         <td>${t.done && t.doneDate ? formatDate(t.doneDate) : '—'}</td></tr>`;
     });
@@ -4017,7 +4026,7 @@ function printReport() {
     html += `<h2>📋 Checklist Maestro</h2>
     <table><tr><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th><th>Cumplida</th></tr>`;
     state.checklist.forEach(t => {
-      html += `<tr><td>${t.name}</td><td>${t.date ? formatDate(t.date) : '—'}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
+      html += `<tr><td>${escHtml(t.name)}</td><td>${t.date ? formatDate(t.date) : '—'}</td><td><span class="badge ${t.priority}">${t.priority}</span></td>
         <td class="${t.done?'done':'pending'}">${t.done?'✅ Cumplida':'⏳ Pendiente'}</td>
         <td>${t.done && t.doneDate ? formatDate(t.doneDate) : '—'}</td></tr>`;
     });
@@ -4025,10 +4034,7 @@ function printReport() {
   }
 
   html += `</body></html>`;
-  const w = window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  w.print();
+  impLanzar(html);
 }
 
 // ═══════════════════════════════════════════
@@ -4622,9 +4628,7 @@ function reporteInversores() {
     ${(() => { const g = embPorProyecto(); return g.length ? `<table>${th('Proyecto', 'Prospectos', 'Clientes activos', '<span>Ya cobra</span>', '<span>Esperado</span>')}${g.map(x => `<tr><td>${escHtml(x.nombre)}</td><td>${x.n}</td><td>${x.clientes}</td><td class="n">${fmtCOP(x.act)}</td><td class="n">${fmtCOP(x.total)}</td></tr>`).join('')}</table>` : ''; })()}
     <table>${th('Etapa', 'Empresas', '<span>Mensualidad</span>')}${pr.filas.filter(f => f.n).map(f => `<tr><td>${escHtml(f.s.name)}</td><td>${f.n}</td><td class="n">${fmtCOP(f.monto)}</td></tr>`).join('')}</table>
     <div class="foot">Generado con Atocha · ${hoy}. Las cifras de pronóstico usan probabilidades por etapa definidas por el equipo y no son un compromiso de resultado.</div></body></html>`;
-  const w = window.open('', '_blank');
-  if (!w) { showToast('⚠️ El navegador bloqueó la ventana. Permite las ventanas emergentes e inténtalo de nuevo'); return; }
-  w.document.write(h); w.document.close(); setTimeout(() => { try { w.print(); } catch (e) { /* el usuario puede imprimir manualmente */ } }, 300);
+  impLanzar(h);
 }
 
 function vistaActual() {
@@ -5054,7 +5058,8 @@ function renderSoportes() {
       <div><div class="card-title" style="margin:0">Soportes</div>
       <div class="so-sub">Cada documento que respalda una novedad o tarea, con su número, para dejar el rastro de cada proyecto.</div></div>
       <div class="so-btns"><button type="button" class="btn-add" onclick="soNuevo('')">+ Nuevo soporte</button>
-      <button type="button" class="edit-btn" onclick="soCsv()">Descargar CSV</button></div>
+      <button type="button" class="edit-btn" onclick="soCsv()">Descargar CSV</button>
+      <button type="button" class="edit-btn" onclick="impSoportes()">🖨 Imprimir</button></div>
     </div>
     ${todos.length ? `<div class="so-filtros">
       <input type="text" id="so-q" placeholder="Buscar por título, proyecto, empresa…" value="${embAttr(soFiltro.q)}" oninput="soSetQ(this.value)">
@@ -5142,6 +5147,122 @@ function soProyHtml(m) {
     ${l.length ? soTabla(l.slice(0, 15), { sinDonde: true }) + (l.length > 15 ? `<div class="so-total">Se muestran los 15 más recientes de ${l.length}.</div>` : '') : '<div class="emb-none" style="padding:14px 4px">Aún no hay soportes. Usa el clip en cada tarea o novedad, o "+ Agregar soporte".</div>'}
   </div>`;
 }
+
+// ═══════════════════════════════════════════════════════════
+//  IMPRIMIR: informe de proyecto, ficha de empresa, registro de soportes,
+//  resumen general y tareas. Se abre el diálogo de impresión (o "Guardar como PDF").
+// ═══════════════════════════════════════════════════════════
+const IMP_CSS = `*{box-sizing:border-box}@page{size:A4;margin:14mm 12mm}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#0F172A;margin:0;padding:6px 4px;font-size:12px;line-height:1.45}
+.cab{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0F172A;padding-bottom:8px;margin-bottom:14px}
+.cab b{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#1D4ED8}.cab h1{font-size:22px;margin:2px 0 0}.cab small{color:#64748B;font-size:11px;text-align:right}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#1D4ED8;border-bottom:1.5px solid #1D4ED8;padding-bottom:3px;margin:18px 0 8px;page-break-after:avoid}
+.kpi{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0}.kpi div{flex:1 1 130px;border:1px solid #E2E8F0;border-radius:8px;padding:9px 11px}
+.kpi span{display:block;font-size:10px;color:#64748B;text-transform:uppercase;letter-spacing:.5px}.kpi b{font-size:16px}
+table{width:100%;border-collapse:collapse;margin-top:4px}th{background:#0F172A;color:#fff;text-align:left;font-size:10.5px;padding:5px 8px}
+td{border-bottom:1px solid #E2E8F0;padding:5px 8px;vertical-align:top}td:first-child{white-space:nowrap}tr{page-break-inside:avoid}td.n,th.n{text-align:right}
+.dato{display:grid;grid-template-columns:150px 1fr;gap:3px 12px}.dato dt{color:#64748B}.dato dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.nov{border-left:3px solid #CBD5E1;padding:2px 0 2px 10px;margin:6px 0;page-break-inside:avoid}.nov small{color:#64748B;display:block}
+.vacio{color:#94A3B8;font-style:italic}.mut{color:#64748B}.url{color:#64748B;font-size:10px;overflow-wrap:anywhere}
+.bar{height:9px;background:#E2E8F0;border-radius:5px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:#2563EB}
+.foot{margin-top:26px;font-size:10px;color:#94A3B8;border-top:1px solid #E2E8F0;padding-top:6px}
+a{color:#1D4ED8;text-decoration:none}`;
+function impDoc(titulo, sub, cuerpo) {
+  const hoy = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escHtml(titulo)} · ${escHtml(state.company)}</title><style>${IMP_CSS}</style></head><body>
+  <div class="cab"><div><b>${escHtml(state.company)}${state.tagline ? ' · ' + escHtml(state.tagline) : ''}</b><h1>${escHtml(titulo)}</h1>${sub ? `<div class="mut">${escHtml(sub)}</div>` : ''}</div><small>Generado el ${hoy}</small></div>
+  ${cuerpo}<div class="foot">Generado con Atocha · ${hoy}</div></body></html>`;
+}
+// Imprime sin ventanas emergentes: un marco oculto con el documento
+function impLanzar(html) {
+  const vie = document.getElementById('imp-frame'); if (vie) vie.remove();
+  const f = document.createElement('iframe'); f.id = 'imp-frame';
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0';
+  document.body.appendChild(f);
+  const d = f.contentWindow.document; d.open(); d.write(html); d.close();
+  setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { showToast('⚠️ No se pudo abrir la impresión'); } }, 350);
+}
+const impTabla = (cab, filas, vacio) => filas.length
+  ? `<table><tr>${cab.map(c => `<th${c.n ? ' class="n"' : ''}>${c.t}</th>`).join('')}</tr>${filas.map(f => `<tr>${f.map((v, i) => `<td${cab[i].n ? ' class="n"' : ''}>${v}</td>`).join('')}</tr>`).join('')}</table>`
+  : `<div class="vacio">${vacio}</div>`;
+const impLinkSoporte = s => { const h = embUrlSegura(s.url); return `${h ? `<a href="${embAttr(h)}">${escHtml(s.titulo)}</a>` : escHtml(s.titulo)}<div class="url">${escHtml(h || '')}</div>`; };
+function impFilasSoportes(l) {
+  return l.map(s => [soCodigo(s), formatDate(s.fecha), impLinkSoporte(s), escHtml(s.tipo), escHtml([s.proyecto, s.empresa && s.empresa !== s.proyecto ? s.empresa : ''].filter(Boolean).join(' · ') || '—'), s.origen && s.origen !== 'manual' ? escHtml(SO_ORIGEN[s.origen] + ': ' + String(s.origenTxt || '').slice(0, 90)) : 'Manual']);
+}
+const IMP_COL_SOP = [{ t: 'N°' }, { t: 'Fecha' }, { t: 'Documento' }, { t: 'Tipo' }, { t: 'Proyecto · Empresa' }, { t: 'Origen' }];
+
+// 1) Informe de un proyecto
+function impProyectoHtml(modId) {
+  const m = state.modules.find(x => x.id === modId); if (!m) return '';
+  const hechas = m.tasks.filter(t => t.done), pend = tkOrden(m.tasks.filter(t => !t.done).map(t => ({ ...t })));
+  const pct = m.tasks.length ? Math.round(hechas.length / m.tasks.length * 100) : 0;
+  const st = STATUSES.find(x => x.key === m.status) || STATUSES[0];
+  const g = embPorProyecto().find(x => x.id === m.id);
+  const ps = embDeProyecto(m.id);
+  const sops = soList().filter(s => s.moduleId === m.id).sort((a, b) => a.n - b.n);
+  let h = `<div class="kpi"><div><span>${modEtiquetaCifra(m)}</span><b>${fmtCOP(m.meta)}</b></div><div><span>Estado</span><b>${escHtml(st.label)}</b></div><div><span>Avance de tareas</span><b>${hechas.length} de ${m.tasks.length} (${pct}%)</b></div></div>
+    <div class="bar"><i style="width:${pct}%"></i></div>${m.desc ? `<p>${escHtml(m.desc)}</p>` : ''}`;
+  h += `<h2>Tareas pendientes (${pend.length})</h2>` + impTabla([{ t: 'Tarea' }, { t: 'Fecha límite' }, { t: 'Prioridad' }], pend.map(t => [escHtml(t.name), t.date ? formatDate(t.date) : 'Sin fecha', escHtml(t.priority || '')]), 'Sin tareas pendientes.');
+  h += `<h2>Tareas cumplidas (${hechas.length})</h2>` + impTabla([{ t: 'Tarea' }, { t: 'Cumplida el' }], hechas.map(t => [escHtml(t.name), t.doneDate ? formatDate(t.doneDate) : '—']), 'Aún no hay tareas cumplidas.');
+  if (ps.length) {
+    h += `<h2>Embudo del proyecto</h2><div class="kpi"><div><span>Empresas</span><b>${ps.length}</b></div><div><span>Ya cobra por mes</span><b>${fmtCOP(g ? g.act : 0)}</b></div><div><span>Esperado por mes</span><b>${fmtCOP(g ? g.total : 0)}</b></div></div>`;
+    h += impTabla([{ t: 'Empresa' }, { t: 'Etapa' }, { t: 'Contacto' }, { t: 'Última novedad' }, { t: 'Mensualidad', n: 1 }], ps.map(p => {
+      const u = (p.bitacora || []).length ? p.bitacora[p.bitacora.length - 1] : null;
+      return [escHtml(p.nombre), escHtml(embNombreEtapaP(p)), escHtml(p.contacto || '—'), u ? escHtml(embFechaCorta(u.fecha) + ': ' + String(u.texto).slice(0, 80)) : '—', fmtCOP(Number(p.mensualidad) || 0)];
+    }), '');
+  }
+  h += `<h2>Soportes (${sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(sops), 'Este proyecto aún no tiene soportes.');
+  return impDoc('Informe del proyecto: ' + m.name, '', h);
+}
+function impProyecto(modId) { const h = impProyectoHtml(modId); if (!h) { showToast('Elige un proyecto'); return; } impLanzar(h); }
+
+// 2) Ficha de una empresa
+function impEmpresaHtml(pid) {
+  const p = embList().find(x => x.id === pid); if (!p) return '';
+  const m = p.moduleId && state.modules.find(x => x.id === p.moduleId);
+  const fila = (k, v) => v ? `<dt>${k}</dt><dd>${escHtml(v)}</dd>` : '';
+  let h = `<h2>Datos</h2><dl class="dato">
+    ${fila('Qué fabrica o vende', p.rubro)}${fila('Etapa', embNombreEtapaP(p))}${fila('Proyecto', m ? m.name : '')}
+    ${p.mensualidad ? fila('Mensualidad', fmtCOP(Number(p.mensualidad))) : ''}${p.valorProyecto ? fila('Valor del proyecto', fmtCOP(Number(p.valorProyecto))) : ''}
+    ${fila('Servicios', (p.servicios || []).join(', '))}${fila('Contacto', p.contacto)}${fila('WhatsApp o teléfono', p.telefono)}${fila('Correo', p.email)}${fila('Ciudad o país', p.ciudad)}${fila('Responsable', p.responsable)}${fila('Motivo si se perdió', p.motivoPerdido)}</dl>`;
+  const pend = embPendientes(p), hechas = (p.actividades || []).filter(a => a.hecha).sort((a, b) => (a.fechaHecha || '') < (b.fechaHecha || '') ? 1 : -1).slice(0, 10);
+  h += `<h2>Actividades pendientes (${pend.length})</h2>` + impTabla([{ t: 'Actividad' }, { t: 'Fecha' }], pend.map(a => [escHtml(a.texto), a.fecha ? formatDate(a.fecha) : 'Sin fecha']), 'Sin actividades pendientes.');
+  if (hechas.length) h += `<h2>Últimas actividades hechas</h2>` + impTabla([{ t: 'Actividad' }, { t: 'Hecha el' }], hechas.map(a => [escHtml(a.texto), a.fechaHecha ? formatDate(a.fechaHecha) : '—']), '');
+  const nov = (p.bitacora || []).slice().reverse();
+  h += `<h2>Novedades (${nov.length})</h2>` + (nov.length ? nov.map(x => { const s = soDe(x.id).map(z => soCodigo(z)).join(', '); return `<div class="nov"><small>${x.contacto ? 'Contacto · ' : ''}${escHtml(embFechaHora(x.fecha))}${s ? ' · Soporte ' + escHtml(s) : ''}</small>${escHtml(x.texto)}</div>`; }).join('') : '<div class="vacio">Sin novedades.</div>');
+  const sops = soList().filter(s => s.pid === p.id).sort((a, b) => a.n - b.n);
+  h += `<h2>Soportes (${sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(sops), 'Sin soportes.');
+  if ((p.enlaces || []).length) h += `<h2>Enlaces</h2>` + impTabla([{ t: 'Nombre' }, { t: 'Dirección' }], p.enlaces.map(e => [escHtml(e.nombre || ''), `<span class="url">${escHtml(embUrlSegura(e.url) || '')}</span>`]), '');
+  if (p.notas) h += `<h2>Notas</h2><p style="white-space:pre-wrap">${escHtml(p.notas)}</p>`;
+  return impDoc('Ficha: ' + p.nombre, '', h);
+}
+function impEmpresa(pid) { const h = impEmpresaHtml(pid); if (!h) { showToast('Elige una empresa'); return; } impLanzar(h); }
+
+// 3) Registro de soportes
+function impSoportesHtml(modId) {
+  const l = (modId === undefined ? soFiltrados() : soList().filter(s => !modId || (modId === '__none' ? !s.moduleId : s.moduleId === modId))).slice().sort((a, b) => a.n - b.n);
+  const m = modId && modId !== '__none' ? state.modules.find(x => x.id === modId) : null;
+  const sub = m ? 'Proyecto: ' + m.name : modId === '__none' ? 'Sin proyecto' : (modId === undefined && (soFiltro.proy || soFiltro.tipo || soFiltro.q) ? 'Con los filtros aplicados' : 'Todos los proyectos');
+  return impDoc('Registro de soportes', sub + ' · ' + l.length + ' documento(s)', impTabla(IMP_COL_SOP, impFilasSoportes(l), 'No hay soportes para mostrar.'));
+}
+function impSoportes(modId) { impLanzar(impSoportesHtml(modId)); }
+
+// 4) Resumen general y 5) todas las tareas: usan los informes que ya existían
+function impEscogerHtml() {
+  const proys = state.modules, emp = embList().slice().sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es'));
+  const pagMod = String(currentPage).indexOf('mod_') === 0 ? currentPage.slice(4) : '';
+  const opt = (v, t, sel) => `<option value="${embAttr(v)}"${sel ? ' selected' : ''}>${escHtml(t)}</option>`;
+  const fila = (t, d, ctl, btn) => `<div class="imp-fila"><div class="imp-t"><b>${t}</b><small>${d}</small></div><div class="imp-c">${ctl}${btn}</div></div>`;
+  return `<h3>🖨 Imprimir o guardar en PDF</h3>
+    <p class="bk-p">Se abre la ventana de impresión del navegador: elige tu impresora o "Guardar como PDF".</p>
+    ${fila('Informe de un proyecto', 'Cifra, avance, tareas, embudo y soportes.', `<select id="imp-proy">${proys.length ? proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('') : '<option value="">No hay proyectos</option>'}</select>`, `<button type="button" class="btn-add" onclick="impProyecto(document.getElementById('imp-proy').value)">Imprimir</button>`)}
+    ${fila('Ficha de una empresa', 'Datos, actividades, novedades y soportes.', `<select id="imp-emp">${emp.length ? emp.map(p => opt(p.id, p.nombre)).join('') : '<option value="">No hay empresas</option>'}</select>`, `<button type="button" class="btn-add" onclick="impEmpresa(document.getElementById('imp-emp').value)">Imprimir</button>`)}
+    ${fila('Registro de soportes', 'La tabla numerada de documentos.', `<select id="imp-sop"><option value="">Todos los proyectos</option>${proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('')}<option value="__none">Sin proyecto</option></select>`, `<button type="button" class="btn-add" onclick="impSoportes(document.getElementById('imp-sop').value)">Imprimir</button>`)}
+    ${fila('Resumen general del negocio', 'Metas, proyectos, ingresos y embudo, para socios o inversores.', '', `<button type="button" class="btn-add" onclick="reporteInversores()">Imprimir</button>`)}
+    ${fila('Todas las tareas', 'Tareas de cada proyecto y del Checklist Maestro.', '', `<button type="button" class="btn-add" onclick="printReport()">Imprimir</button>`)}
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
+}
+function impMenu() { setModal(impEscogerHtml(), 620); }
 
 </script>
 </body>
