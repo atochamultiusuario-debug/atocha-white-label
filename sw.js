@@ -1,6 +1,6 @@
 // Service worker de Atocha: primero la red (siempre la versión más nueva) y,
 // si no hay internet, lo último guardado. Solo atiende archivos de la propia app.
-const CACHE = 'atocha-v3';
+const CACHE = 'atocha-v4';
 const BASE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

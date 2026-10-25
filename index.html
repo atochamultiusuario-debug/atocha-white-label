@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Atocha">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1E3A8A">
+<meta name="theme-color" content="#0B0B0B">
 <title>Atocha</title>
 <meta name="description" content="Tus proyectos, prospectos, tareas y metas en un solo lugar.">
 <meta property="og:type" content="website">
@@ -17,6 +17,7 @@
 <meta property="og:url" content="https://atochamultiusuario-debug.github.io/atocha-white-label/">
 <meta property="og:image" content="https://atochamultiusuario-debug.github.io/atocha-white-label/og-image.jpg">
 <link rel="manifest" href="manifest.json" id="pwa-manifest">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" id="apple-icon">
 <style>
 :root {
@@ -4004,7 +4005,7 @@ function modalFijo(si) { const mb = document.getElementById('modal-body'); if (m
   const ctx = canvas.getContext('2d');
   // Background
   const grad = ctx.createLinearGradient(0,0,512,512);
-  grad.addColorStop(0,'#0F2557'); grad.addColorStop(1,'#1D4ED8');
+  grad.addColorStop(0,'#0B0B0B'); grad.addColorStop(1,'#0B0B0B');
   ctx.fillStyle = grad;
   const r = 100;
   ctx.beginPath();
@@ -4014,7 +4015,7 @@ function modalFijo(si) { const mb = document.getElementById('modal-body'); if (m
   ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0);
   ctx.closePath(); ctx.fill();
   // Letter A
-  ctx.fillStyle = '#F59E0B';
+  ctx.fillStyle = '#FACC15';
   ctx.font = 'bold 360px Arial Black, Arial';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('A', 256, 280);
