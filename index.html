@@ -709,10 +709,37 @@ button, input, select, textarea { font-family: inherit; }
 .ee-row select { width: 150px; padding: 8px 6px; border: 1.5px solid var(--gray-200); border-radius: 8px; background: var(--white); color: var(--gray-900); font-family: inherit; font-size: 12px; }
 .ee-row .dt-btn:disabled { opacity: .3; }
 @media (max-width: 560px) { .ee-row { flex-wrap: wrap; } .ee-row select { width: 100%; order: 5; } .mp-col { flex-basis: 78vw; } }
+
+/* ---- Inicio de sesión y cuenta ---- */
+#login { position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #0B1220, #1E293B); }
+.lg-card { width: 100%; max-width: 400px; background: var(--white); color: var(--gray-900); border-radius: 14px; padding: 32px 28px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.lg-logo { font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
+.lg-sub { font-size: 14px; color: var(--gray-600); margin: 8px 0 24px; line-height: 1.5; }
+.lg-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 12px 16px; background: #fff; color: #1F2937; border: 1px solid #DADCE0; border-radius: 8px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.lg-google:hover { background: #F8FAFC; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+#lg-msg { display: none; font-size: 13px; background: #FEF3C7; color: #92400E; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; text-align: left; line-height: 1.4; }
+.lg-nota { font-size: 12px; color: var(--gray-400); margin-top: 18px; line-height: 1.5; } .lg-nota a { color: var(--blue-600); }
+.auth-on .solo-manual { display: none !important; }
+.cta-fila { display: flex; align-items: center; gap: 12px; margin: 8px 0 14px; }
+.cta-av { width: 44px; height: 44px; border-radius: 50%; background: var(--blue-600); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; overflow: hidden; flex: none; } .cta-av img { width: 100%; height: 100%; object-fit: cover; }
+.cta-d b { display: block; font-size: 15px; } .cta-d small { color: var(--gray-400); font-size: 13px; overflow-wrap: anywhere; }
+.cta-btns { display: flex; gap: 8px; flex-wrap: wrap; } .cta-peligro { color: var(--red); }
+.priv p { font-size: 13px; line-height: 1.55; color: var(--gray-700); margin-bottom: 10px; }
 </style>
 <body>
 
 <!-- ONBOARDING -->
+<div id="login" style="display:none">
+  <div class="lg-card">
+    <div class="lg-logo">Atocha</div>
+    <p class="lg-sub">Tus proyectos, prospectos, tareas y metas en un solo lugar.</p>
+    <div id="lg-msg"></div>
+    <button type="button" id="lg-btn" class="lg-google" onclick="authLogin()">
+      <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google</button>
+    <p class="lg-nota">Tus datos se guardan en tu cuenta y solo tú puedes verlos desde la app. <a href="#" onclick="privacidadAbrir();return false">Cómo cuidamos tus datos</a></p>
+  </div>
+</div>
 <div id="onboarding">
   <div class="ob-card">
     <div class="ob-logo">Atocha</div>
@@ -825,6 +852,7 @@ button, input, select, textarea { font-family: inherit; }
       <div class="nav-section">Opciones</div>
       <div class="nav-item" onclick="installApp()" id="nav-app"><span class="ni" data-i="download"></span><span class="nn">Descargar app</span></div>
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
+      <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
     </div>
   </nav>
@@ -942,6 +970,7 @@ const ICONOS = {
   'print': '<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
   'search': '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
   'repeat': '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+  'exit': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
   'edit': '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'
 };
 const ICON_KEYS = ['building','hotel','factory','store','globe','coin','bank','chart','target','briefcase','home','truck','plant','cart','health','cap','plane','shield','phone','bulb','bolt','wave','trophy','wrench','flask','gem','users','folder'];
@@ -1003,10 +1032,18 @@ function modTag(m) {
 function modEtiquetaCifra(m) { return { capital: 'Capital requerido', mensual: 'Ingreso mensual', venta: 'Venta aspirada' }[modTipo(m)] || 'Objetivo'; }
 const COLORS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#F97316'];
 const MAX_PROJECTS = 22;
-const DEFAULT_SUPABASE = {
-  url: 'https://dswmwnnmtjvdzgyhscdv.supabase.co',
-  key: 'sb_publishable__CTEfCmCR5T8nhIG7XArVw_7yk53rcP'
+// ═══ CONFIGURACIÓN DE LA APP ═══
+// Versión personal:   googleLogin: false  → sincroniza con el código de cada negocio (como hasta ahora).
+// Versión para compartir: googleLogin: true y poner aquí la URL y la llave "anon" de TU proyecto de Supabase.
+//   Cada persona entra con su cuenta de Google y solo ve sus propios datos (ver la guía de instalación).
+const APP_CONFIG = {
+  supabaseUrl: 'https://dswmwnnmtjvdzgyhscdv.supabase.co',
+  anonKey: 'sb_publishable__CTEfCmCR5T8nhIG7XArVw_7yk53rcP',
+  googleLogin: true,
+  contacto: ''          // correo de contacto para temas de privacidad (se muestra en "Cómo cuidamos tus datos")
 };
+const DEFAULT_SUPABASE = { url: APP_CONFIG.supabaseUrl, key: APP_CONFIG.anonKey };
+const AUTH_ON = !!APP_CONFIG.googleLogin;
 
 // ═══════════════════════════════════════════
 //  PROFILES (multi-negocio)
@@ -1036,13 +1073,13 @@ function saveLocal(sinMarcar) {
   if (!sinMarcar) state.cambiosSinSubir = true;   // se apaga al subir o descargar de la nube
   if (profilesData.activeId) {
     profilesData.profiles[profilesData.activeId] = state;
-    localStorage.setItem('atocha_profiles_v1', JSON.stringify(profilesData));
+    localStorage.setItem(('atocha_profiles_v1' + lsSufijo()), JSON.stringify(profilesData));
   }
   showToast('💾 Guardado');
 }
 function loadLocal() {
   // Try new multi-profile storage first
-  const d = localStorage.getItem('atocha_profiles_v1');
+  const d = localStorage.getItem(('atocha_profiles_v1' + lsSufijo()));
   if (d) {
     try {
       const parsed = JSON.parse(d);
@@ -1055,7 +1092,7 @@ function loadLocal() {
     } catch(e){}
   }
   // Migration from old single-profile storage
-  const old = localStorage.getItem('atocha_wl');
+  const old = AUTH_ON ? null : localStorage.getItem('atocha_wl');
   if (old) {
     try {
       const oldState = JSON.parse(old);
@@ -1185,6 +1222,7 @@ function obFinish() {
 //  INIT
 // ═══════════════════════════════════════════
 function initApp() {
+  const ns = document.getElementById('nav-salir'); if (ns) ns.style.display = AUTH_ON ? '' : 'none';
   if (state.dark) document.body.classList.add('dark'); else document.body.classList.remove('dark');
   document.getElementById('sb-company').textContent = state.company;
   renderSidebar();
@@ -1195,13 +1233,7 @@ function initApp() {
   setTimeout(recordatorioDia, 1600);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  if (loadLocal()) {
-    document.getElementById('onboarding').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-  }
-});
+window.addEventListener('DOMContentLoaded', () => { arrancar(); });
 
 // ═══════════════════════════════════════════
 //  PROFILE SWITCHER (multi-negocio)
@@ -1253,7 +1285,7 @@ function switchProfile(id) {
   profilesData.activeId = id;
   state = profilesData.profiles[id];
   ensureDefaults();
-  localStorage.setItem('atocha_profiles_v1', JSON.stringify(profilesData));
+  localStorage.setItem(('atocha_profiles_v1' + lsSufijo()), JSON.stringify(profilesData));
   toggleProfileMenu();
   if (state.dark) document.body.classList.add('dark'); else document.body.classList.remove('dark');
   renderSidebar();
@@ -3628,15 +3660,15 @@ function embDelete() {
 //  SYNC (Supabase)
 // ═══════════════════════════════════════════
 function renderSync() {
-  const connected = state.sync.url && state.sync.key;
+  const connected = sbOk();
   document.getElementById('page-content').innerHTML = `
   <div class="sync-card">
     <div class="card-title">☁️ Sincronización Supabase</div>
     <div class="sync-status">
       <div class="status-dot ${connected ? 'dot-green' : 'dot-red'}"></div>
-      <div class="sync-label">${connected ? 'Configurado' : 'Sin configurar'}</div>
+      <div class="sync-label">${AUTH_ON ? (authSession ? 'Conectado como ' + escHtml(authSession.user.email) : 'Sin sesión') : (connected ? 'Configurado' : 'Sin configurar')}</div>
     </div>
-    <div class="sync-form">
+    <div class="sync-form solo-manual">
       <label style="font-size:13px;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">URL del proyecto Supabase</label>
       <input type="text" id="sy-url" value="${state.sync.url}" placeholder="https://xxxx.supabase.co">
       <label style="font-size:13px;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Anon Key</label>
@@ -3647,7 +3679,7 @@ function renderSync() {
       <button class="btn-sync-up" onclick="syncUp()">☁️ Subir a la nube</button>
       <button class="btn-sync-down" onclick="syncDownSeguro()">⬇️ Descargar de nube</button>
     </div>
-    <div class="sync-form" style="margin-top:20px;border-top:1px solid var(--gray-200);padding-top:18px;">
+    <div class="sync-form solo-manual" style="margin-top:20px;border-top:1px solid var(--gray-200);padding-top:18px;">
       <label style="font-size:13px;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Código de sincronización de este negocio</label>
       <input type="text" id="sy-code" value="${embAttr(state.clientId || '')}" readonly onclick="this.select()">
       <button class="btn-add" onclick="copySyncCode()">📋 Copiar código</button>
@@ -3689,13 +3721,13 @@ function saveSync() {
 }
 
 async function syncUp() {
-  if (!state.sync.url || !state.sync.key) { showToast('⚠️ Configura Supabase primero'); return; }
+  if (!sbOk()) { showToast(AUTH_ON ? '⚠️ Inicia sesión primero' : '⚠️ Configura Supabase primero'); return; }
   if (!state.clientId) state.clientId = 'cli_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
   try {
     const payload = JSON.stringify(state);
-    const res = await fetch(`${state.sync.url}/rest/v1/atocha_sync`, {
+    const res = await sbFetch('/rest/v1/atocha_sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': state.sync.key, 'Authorization': `Bearer ${state.sync.key}`, 'Prefer': 'resolution=merge-duplicates' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: state.clientId, data: payload, updated_at: new Date().toISOString() })
     });
     if (res.ok || res.status === 201 || res.status === 200) {
@@ -3708,12 +3740,10 @@ async function syncUp() {
 
 // Devuelve true si descargó datos y false si no (para poder encadenar acciones).
 async function syncDown() {
-  if (!state.sync.url || !state.sync.key) { showToast('⚠️ Configura Supabase primero'); return false; }
+  if (!sbOk()) { showToast(AUTH_ON ? '⚠️ Inicia sesión primero' : '⚠️ Configura Supabase primero'); return false; }
   if (!state.clientId) { showToast('⚠️ Aún no has subido datos a la nube'); return false; }
   try {
-    const res = await fetch(`${state.sync.url}/rest/v1/atocha_sync?id=eq.${encodeURIComponent(state.clientId)}`, {
-      headers: { 'apikey': state.sync.key, 'Authorization': `Bearer ${state.sync.key}` }
-    });
+    const res = await sbFetch(`/rest/v1/atocha_sync?id=eq.${encodeURIComponent(state.clientId)}`);
     if (!res.ok) { showToast('❌ Error al descargar (código ' + res.status + ')'); return false; }
     const rows = await res.json();
     if (rows && rows[0] && rows[0].data) {
@@ -3784,7 +3814,7 @@ function importBackup(e) {
 //  CONFIG
 // ═══════════════════════════════════════════
 function renderConfig() {
-  document.getElementById('page-content').innerHTML = `
+  document.getElementById('page-content').innerHTML = cuentaHtml() + `
   <div class="card" style="max-width:480px;">
     <div class="card-title">⚙️ Configuración general</div>
     <div class="modal-field">
@@ -3802,7 +3832,7 @@ function renderConfig() {
     <label class="cfg-check"><input type="checkbox" ${state.recordarOff ? '' : 'checked'} onchange="state.recordarOff=!this.checked;saveLocal()"> Mostrar el resumen del día al abrir la app</label>
     <button class="btn-confirm" onclick="saveConfig()" style="width:100%;padding:12px;">Guardar cambios</button>
 
-    <div style="margin-top:24px;border-top:1px solid var(--gray-200);padding-top:20px;">
+    <div class="solo-manual" style="margin-top:24px;border-top:1px solid var(--gray-200);padding-top:20px;">
       <div class="card-title" style="margin-bottom:8px;">🔗 Código de este negocio</div>
       <p style="font-size:12px;color:var(--gray-400);margin-bottom:10px;line-height:1.5;">Copia este código y pégalo en el campo "Código de sincronización" al crear este mismo negocio en otro dispositivo, para vincularlos.</p>
       <div style="display:flex;gap:8px;">
@@ -3811,7 +3841,7 @@ function renderConfig() {
       </div>
     </div>
 
-    <div style="margin-top:20px;border-top:1px solid var(--gray-200);padding-top:20px;">
+    <div class="solo-manual" style="margin-top:20px;border-top:1px solid var(--gray-200);padding-top:20px;">
       <div class="card-title" style="margin-bottom:8px;">🔄 Vincular con otro dispositivo</div>
       <p style="font-size:12px;color:var(--gray-400);margin-bottom:10px;line-height:1.5;">Pega aquí el código de este negocio copiado desde otro dispositivo, y descarga sus datos más recientes.</p>
       <div style="display:flex;gap:8px;">
@@ -3862,14 +3892,14 @@ function deleteBusiness() {
   profilesData.activeId = Object.keys(profilesData.profiles)[0];
   state = profilesData.profiles[profilesData.activeId];
   ensureDefaults();
-  localStorage.setItem('atocha_profiles_v1', JSON.stringify(profilesData));
+  localStorage.setItem(('atocha_profiles_v1' + lsSufijo()), JSON.stringify(profilesData));
   if (state.dark) document.body.classList.add('dark'); else document.body.classList.remove('dark');
   renderSidebar(); renderProfileSwitcher(); goPage('dashboard');
   showToast('🗑 Negocio eliminado');
 }
 function resetApp() {
   if (!confirm('¿Estás seguro? Se borrarán TODOS los negocios y datos locales.')) return;
-  localStorage.removeItem('atocha_profiles_v1');
+  localStorage.removeItem(('atocha_profiles_v1' + lsSufijo()));
   localStorage.removeItem('atocha_wl');
   location.reload();
 }
@@ -4047,7 +4077,7 @@ function installApp() {
 // Cloud banner on load
 function showCloudBanner() {
   const banner = document.getElementById('cloud-banner');
-  if (!state.sync.url || !state.sync.key) return;
+  if (!sbOk()) return;
   const date = state.lastSync ? new Date(state.lastSync).toLocaleString('es-CO') : 'nunca';
   document.getElementById('banner-sync-date').textContent = date;
   banner.style.display = 'flex';
@@ -4083,7 +4113,7 @@ const SNAP_KEY = 'atocha_snaps_v1', SNAP_TOPE = 1200000, SNAP_MAX = 10;
 function snapLeer() { try { const l = JSON.parse(localStorage.getItem(SNAP_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
 function snapEscribir(l) {
   for (;;) {
-    try { localStorage.setItem(SNAP_KEY, JSON.stringify(l)); return true; }
+    try { localStorage.setItem(SNAP_KEY + lsSufijo(), JSON.stringify(l)); return true; }
     catch (e) { if (l.length <= 1) return false; l.pop(); }
   }
 }
@@ -4130,10 +4160,10 @@ function snapBorrar() {
 async function bkNube() {
   try {
     const hoy = embToday();
-    if (state.bkNubeDia === hoy || !state.sync.url || !state.sync.key) return;
-    const res = await fetch(`${state.sync.url}/rest/v1/atocha_sync`, {
+    if (state.bkNubeDia === hoy || !sbOk()) return;
+    const res = await sbFetch('/rest/v1/atocha_sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': state.sync.key, 'Authorization': `Bearer ${state.sync.key}`, 'Prefer': 'resolution=merge-duplicates' },
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({ id: state.clientId + '__bk' + new Date().getDay(), data: JSON.stringify(state), updated_at: new Date().toISOString() })
     });
     if (res.ok) { state.bkNubeDia = hoy; saveLocal(true); }
@@ -4141,10 +4171,10 @@ async function bkNube() {
 }
 async function bkNubeListar() {
   const box = document.getElementById('bk-nube'); if (!box) return;
-  if (!state.sync.url || !state.sync.key) { box.innerHTML = '<div class="bk-vacio">Configura Supabase primero.</div>'; return; }
+  if (!sbOk()) { box.innerHTML = '<div class="bk-vacio">Configura Supabase primero.</div>'; return; }
   box.innerHTML = '<div class="bk-vacio">Buscando copias…</div>';
   try {
-    const res = await fetch(`${state.sync.url}/rest/v1/atocha_sync?id=like.${encodeURIComponent(state.clientId)}__bk*&select=id,updated_at&order=updated_at.desc`, { headers: { 'apikey': state.sync.key, 'Authorization': `Bearer ${state.sync.key}` } });
+    const res = await sbFetch(`/rest/v1/atocha_sync?id=like.${encodeURIComponent(state.clientId)}__bk*&select=id,updated_at&order=updated_at.desc`);
     if (!res.ok) { box.innerHTML = '<div class="bk-vacio">❌ No se pudo leer (código ' + res.status + ')</div>'; return; }
     const rows = (await res.json()).filter(r => /^[\w.:\-]+$/.test(String(r.id)));
     box.innerHTML = rows.length ? rows.map(r => `<div class="bk-fila"><span>${escHtml(new Date(r.updated_at).toLocaleString('es-CO'))}</span><button type="button" class="edit-btn" onclick="bkNubeRestaurar('${embAttr(r.id)}')">Restaurar</button></div>`).join('')
@@ -4153,7 +4183,7 @@ async function bkNubeListar() {
 }
 async function bkNubeRestaurar(id) {
   try {
-    const res = await fetch(`${state.sync.url}/rest/v1/atocha_sync?id=eq.${encodeURIComponent(id)}`, { headers: { 'apikey': state.sync.key, 'Authorization': `Bearer ${state.sync.key}` } });
+    const res = await sbFetch(`/rest/v1/atocha_sync?id=eq.${encodeURIComponent(id)}`);
     const rows = res.ok ? await res.json() : [];
     if (!rows[0] || !rows[0].data) { showToast('❌ No se encontró esa copia'); return; }
     restaurarEstado(JSON.parse(rows[0].data), new Date(rows[0].updated_at).toLocaleString('es-CO'));
@@ -4325,7 +4355,7 @@ function badgeApp() {
 function recordatorioDia() {
   try {
     if (state.recordarOff) return;
-    const hoy = embToday(), clave = 'atocha_rec_' + (state.clientId || '');
+    const hoy = embToday(), clave = 'atocha_rec_' + lsSufijo() + (state.clientId || '');
     if (localStorage.getItem(clave) === hoy) return;
     if (document.getElementById('modal').style.display === 'flex') return;
     const d = datosDelDia();
@@ -4638,6 +4668,150 @@ function embEtapasGenerales() {
   delete m.embEtapas; if (_ee.fee > 0) m.embFee = _ee.fee; else delete m.embFee;
   embDeProyecto(m.id).forEach(embSincEtapaP);
   saveLocal(); renderSidebar(); closeModal(); renderModule(m.id);
+}
+
+// ═══════════════════════════════════════════
+//  CUENTAS (Google, vía Supabase Auth)
+// ═══════════════════════════════════════════
+const AUTH_KEY = 'atocha_auth_v1';
+let authSession = null, LS_USER = '';
+function lsSufijo() { return AUTH_ON ? '_' + LS_USER : ''; }
+function sbCfg() { const sy = (state && state.sync) || {}; return AUTH_ON ? { url: String(APP_CONFIG.supabaseUrl || '').replace(/\/+$/, ''), key: APP_CONFIG.anonKey } : { url: String(sy.url || APP_CONFIG.supabaseUrl || '').replace(/\/+$/, ''), key: sy.key || APP_CONFIG.anonKey }; }
+function sbOk() { const c = sbCfg(); return !!(c.url && c.key && (!AUTH_ON || authSession)); }
+// Toda llamada a la base pasa por aquí: con Google usa el token de la persona (nunca la llave pública sola).
+async function sbFetch(path, opts) {
+  opts = opts || {};
+  if (AUTH_ON && !(await authAsegurar())) throw new Error('sin sesion');
+  const c = sbCfg();
+  const hdr = () => ({ apikey: c.key, ...(AUTH_ON ? { Authorization: 'Bearer ' + authSession.access_token } : (/^eyJ/.test(c.key) ? { Authorization: 'Bearer ' + c.key } : {})), ...(opts.headers || {}) });
+  let res = await fetch(c.url + path, { ...opts, headers: hdr() });
+  if (AUTH_ON && res.status === 401 && await authRefrescar()) res = await fetch(c.url + path, { ...opts, headers: hdr() });
+  return res;
+}
+function b64urlJson(t) { try { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; return JSON.parse(decodeURIComponent(Array.prototype.map.call(atob(t), ch => '%' + ('00' + ch.charCodeAt(0).toString(16)).slice(-2)).join(''))); } catch (e) { return null; } }
+function authUsuarioDe(token) {
+  const p = b64urlJson(String(token || '').split('.')[1] || ''); if (!p || !p.sub) return null;
+  const m = p.user_metadata || {};
+  return { id: String(p.sub), email: p.email || m.email || '', name: m.full_name || m.name || '', avatar: m.avatar_url || m.picture || '', exp: Number(p.exp) || 0 };
+}
+function authGuardar(x) { authSession = x; try { if (x) localStorage.setItem(AUTH_KEY, JSON.stringify(x)); else localStorage.removeItem(AUTH_KEY); } catch (e) { /* sin almacenamiento */ } }
+function authLeer() { try { const x = JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); if (x && x.access_token && x.refresh_token && x.user && x.user.id) return x; } catch (e) { /* sesión dañada */ } return null; }
+// Supabase devuelve la sesión en la dirección (#access_token=...) al volver de Google.
+function authDesdeHash() {
+  const h = location.hash;
+  if (!/access_token=|error=|error_description=/.test(h)) return null;
+  const q = new URLSearchParams(h.replace(/^#/, ''));
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* sin historial */ }
+  if (q.get('error') || q.get('error_description')) return { error: q.get('error_description') || q.get('error') };
+  const at = q.get('access_token'), rt = q.get('refresh_token'), u = authUsuarioDe(at);
+  if (!at || !rt || !u) return { error: 'La respuesta del inicio de sesión no es válida' };
+  authGuardar({ access_token: at, refresh_token: rt, expires_at: u.exp || Math.floor(Date.now() / 1000) + 3600, user: u });
+  return true;
+}
+async function authRefrescar() {
+  const x = authSession; if (!x) return false;
+  try {
+    const res = await fetch(APP_CONFIG.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: APP_CONFIG.anonKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: x.refresh_token }) });
+    if (!res.ok) { if (res.status >= 400 && res.status < 500) authGuardar(null); return false; }
+    const j = await res.json(), u = authUsuarioDe(j.access_token); if (!u) return false;
+    authGuardar({ access_token: j.access_token, refresh_token: j.refresh_token || x.refresh_token, expires_at: u.exp || Math.floor(Date.now() / 1000) + 3600, user: u });
+    return true;
+  } catch (e) { return false; }   // sin internet: se sigue con el token actual mientras no haya vencido
+}
+async function authAsegurar() {
+  if (!authSession) return false;
+  if (authSession.expires_at - Date.now() / 1000 > 60) return true;
+  if (await authRefrescar()) return true;
+  return !!(authSession && authSession.expires_at > Date.now() / 1000);
+}
+function authLogin() {
+  const b = document.getElementById('lg-btn'); if (b) { b.disabled = true; b.style.opacity = '.6'; }
+  location.href = APP_CONFIG.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname);
+}
+async function authSalir() {
+  if (!confirm('¿Cerrar sesión? Tus datos siguen guardados en tu cuenta. Si tienes cambios sin subir, pulsa ☁️ Subir antes de salir.')) return;
+  try { if (authSession) await fetch(APP_CONFIG.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/logout', { method: 'POST', headers: { apikey: APP_CONFIG.anonKey, Authorization: 'Bearer ' + authSession.access_token } }); } catch (e) { /* aun así se cierra aquí */ }
+  authGuardar(null); LS_USER = ''; location.reload();
+}
+function pantallaLogin(modo, detalle) {
+  document.getElementById('onboarding').style.display = 'none'; document.getElementById('app').style.display = 'none';
+  document.getElementById('login').style.display = 'flex';
+  const msg = document.getElementById('lg-msg'), btn = document.getElementById('lg-btn');
+  const t = { config: 'Falta configurar la app: pon la URL y la llave de Supabase en APP_CONFIG (mira la guía de instalación).', error: 'No se pudo iniciar sesión: ' + (detalle || ''), expirada: 'Tu sesión venció. Vuelve a entrar con Google.' }[modo] || '';
+  msg.textContent = t; msg.style.display = t ? 'block' : 'none';
+  if (modo === 'config') btn.style.display = 'none';
+}
+function mostrarApp() {
+  document.getElementById('login').style.display = 'none'; document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('app').style.display = 'block'; initApp();
+}
+async function nubeCargarNegocios() {
+  try {
+    const res = await sbFetch('/rest/v1/atocha_sync?select=id,data,updated_at&order=updated_at.desc');
+    if (!res.ok) return 0;
+    const rows = (await res.json()).filter(r => r && r.data && !/__bk/.test(String(r.id)));
+    const perfiles = {}; let primero = null;
+    rows.forEach(r => { try { const o = JSON.parse(r.data); if (o && Array.isArray(o.modules)) { o.clientId = r.id; o.cambiosSinSubir = false; perfiles[r.id] = o; if (!primero) primero = r.id; } } catch (e) { /* fila dañada */ } });
+    if (!primero) return 0;
+    profilesData = { profiles: perfiles, activeId: primero }; state = perfiles[primero]; ensureDefaults(); saveLocal(true);
+    return Object.keys(perfiles).length;
+  } catch (e) { return 0; }
+}
+async function arrancar() {
+  if (!AUTH_ON) {
+    if (loadLocal()) { document.getElementById('onboarding').style.display = 'none'; document.getElementById('app').style.display = 'block'; initApp(); }
+    return;
+  }
+  document.body.classList.add('auth-on');
+  document.getElementById('onboarding').style.display = 'none';
+  if (!APP_CONFIG.supabaseUrl || !APP_CONFIG.anonKey) { pantallaLogin('config'); return; }
+  const r = authDesdeHash();
+  if (r && r.error) { pantallaLogin('error', r.error); return; }
+  if (!authSession) authSession = authLeer();
+  if (!authSession) { pantallaLogin(); return; }
+  if (!(await authAsegurar())) { pantallaLogin('expirada'); return; }
+  LS_USER = authSession.user.id;
+  if (loadLocal()) { mostrarApp(); return; }
+  const n = await nubeCargarNegocios();            // dispositivo nuevo: recupera sus negocios de la nube
+  if (n) { mostrarApp(); showToast('⬇️ Recuperamos ' + n + (n === 1 ? ' negocio' : ' negocios') + ' de tu cuenta'); return; }
+  document.getElementById('login').style.display = 'none'; document.getElementById('onboarding').style.display = '';
+}
+function cuentaHtml() {
+  if (!AUTH_ON || !authSession) return '';
+  const u = authSession.user, ini = (u.name || u.email || '?').trim().charAt(0).toUpperCase();
+  return `<div class="card" style="max-width:480px;margin-bottom:16px">
+    <div class="card-title">Tu cuenta</div>
+    <div class="cta-fila"><div class="cta-av">${u.avatar && /^https:\/\//.test(u.avatar) ? `<img src="${embAttr(u.avatar)}" alt="" referrerpolicy="no-referrer">` : escHtml(ini)}</div>
+      <div class="cta-d"><b>${escHtml(u.name || 'Cuenta de Google')}</b><small>${escHtml(u.email)}</small></div></div>
+    <div class="cta-btns"><button type="button" class="edit-btn" onclick="authSalir()">Cerrar sesión</button>
+      <button type="button" class="edit-btn" onclick="privacidadAbrir()">Cómo cuidamos tus datos</button>
+      <button type="button" class="edit-btn cta-peligro" onclick="cuentaEliminar()">Eliminar mi cuenta y mis datos</button></div>
+  </div>`;
+}
+async function cuentaEliminar() {
+  if (!AUTH_ON || !authSession) return;
+  if (!confirm('Se eliminarán tu cuenta y TODOS tus datos de la nube (negocios, prospectos, copias). Esto no se puede deshacer. ¿Continuar?')) return;
+  const email = prompt('Para confirmar, escribe tu correo: ' + authSession.user.email);
+  if (email === null) return;
+  if (email.trim().toLowerCase() !== String(authSession.user.email).toLowerCase()) { showToast('⚠️ El correo no coincide: no se eliminó nada'); return; }
+  try {
+    const res = await sbFetch('/rest/v1/rpc/borrar_mi_cuenta', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!res.ok) { showToast('❌ No se pudo eliminar (código ' + res.status + '). Escribe al administrador.'); return; }
+  } catch (e) { showToast('❌ Sin conexión: no se eliminó nada'); return; }
+  try { localStorage.removeItem('atocha_profiles_v1' + lsSufijo()); localStorage.removeItem(SNAP_KEY + lsSufijo()); } catch (e) { /* ya no importa */ }
+  authGuardar(null); LS_USER = ''; alert('Tu cuenta y tus datos fueron eliminados.'); location.reload();
+}
+function privacidadAbrir() {
+  const c = APP_CONFIG.contacto ? `Para cualquier consulta sobre tus datos escribe a <b>${escHtml(APP_CONFIG.contacto)}</b>.` : 'Pide al administrador de esta instalación su correo de contacto.';
+  setModal(`<h3>Cómo cuidamos tus datos</h3>
+    <div class="priv">
+    <p><b>Qué guardamos.</b> Tu nombre y correo de Google, y lo que escribes en la app: negocios, proyectos, tareas, prospectos, notas e ingresos.</p>
+    <p><b>Dónde.</b> En una base de datos en la nube (Supabase). Cada fila queda ligada a tu cuenta y solo tu sesión puede leerla o cambiarla; otras personas que usen la app no ven nada tuyo.</p>
+    <p><b>Quién podría verlos.</b> Quien administra esta instalación tiene acceso técnico a la base de datos. No se usan para publicidad ni se venden o comparten con terceros.</p>
+    <p><b>Datos de tus clientes.</b> Si guardas datos personales de tus prospectos (nombre, teléfono, correo), tú eres responsable de tener su autorización para tratarlos, según la Ley 1581 de 2012 en Colombia o la norma de tu país.</p>
+    <p><b>Tus derechos.</b> Puedes descargar todo con Backup &gt; Exportar, corregirlo en la app y eliminar tu cuenta y tus datos desde Configuración. ${c}</p>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`, 560);
 }
 </script>
 </body>
