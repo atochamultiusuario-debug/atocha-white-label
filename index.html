@@ -786,7 +786,7 @@ button, input, select, textarea { font-family: inherit; }
 
     <div class="ob-step" id="ob3">
       <h2>Tus proyectos</h2>
-      <p>Crea tus proyectos estratégicos. Puedes agregar hasta 22 proyectos y editarlos en cualquier momento.</p>
+      <p>Crea tus proyectos estratégicos. Puedes agregar hasta 30 proyectos y editarlos en cualquier momento.</p>
       <div id="ob-projects-list" style="margin-bottom:14px;max-height:220px;overflow-y:auto;"></div>
       <button class="btn-primary" style="background:var(--gray-200);color:var(--gray-700);margin-bottom:10px;" onclick="obAddProject()">+ Agregar proyecto</button>
       <button class="btn-primary" onclick="obFinish()">Empezar →</button>
@@ -1039,7 +1039,7 @@ function modTag(m) {
 }
 function modEtiquetaCifra(m) { return { capital: 'Capital requerido', mensual: 'Ingreso mensual', venta: 'Venta aspirada' }[modTipo(m)] || 'Objetivo'; }
 const COLORS = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#F97316'];
-const MAX_PROJECTS = 22;
+const MAX_PROJECTS = 30;
 // ═══ CONFIGURACIÓN DE LA APP ═══
 // Versión personal:   googleLogin: false  → sincroniza con el código de cada negocio (como hasta ahora).
 // Versión para compartir: googleLogin: true y poner aquí la URL y la llave "anon" de TU proyecto de Supabase.
