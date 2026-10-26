@@ -790,6 +790,26 @@ a.so-link:hover { text-decoration: underline; }
 .imp-c { display: flex; gap: 8px; flex: 1 1 260px; justify-content: flex-end; flex-wrap: wrap; }
 .imp-c select { flex: 1 1 160px; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; background: white; color: var(--gray-900); font-family: inherit; }
 .dark .imp-c select { background: var(--gray-800); color: var(--gray-100); border-color: var(--gray-600); }
+
+.tk-num { display: inline-block; border: none; cursor: pointer; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; font-weight: 700; letter-spacing: .2px; color: var(--blue-700); background: var(--blue-50); border-radius: 5px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px; }
+.tk-num:hover { background: #DBEAFE; }
+.dark .tk-num { background: rgba(96,165,250,.15); color: #93C5FD; }
+.tk-num.grande { font-size: 14px; padding: 3px 10px; cursor: default; margin: 0; }
+.th-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.th-est { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #FEF3C7; color: #92400E; } .th-est.ok { background: #DCFCE7; color: #166534; } .th-est.mal { background: #FEE2E2; color: #991B1B; }
+.th-nombre { font-size: 18px; margin: 4px 0 12px; overflow-wrap: anywhere; }
+.th-grid { display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; font-size: 13px; margin-bottom: 14px; }
+.th-k { color: var(--gray-400); } .th-v { font-weight: 600; overflow-wrap: anywhere; }
+.th-sec { margin: 14px 0; padding-top: 12px; border-top: 1px solid var(--gray-200); } .th-sec-t { font-size: 13px; font-weight: 800; margin-bottom: 8px; }
+.th-partes { display: flex; flex-wrap: wrap; gap: 8px; }
+.pt-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 12px; }
+.pt-tab { border: 1.5px solid var(--gray-200); background: white; border-radius: 999px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; color: var(--gray-700); }
+.dark .pt-tab { background: var(--gray-800); border-color: var(--gray-600); color: var(--gray-100); }
+.pt-tab.act { background: var(--blue-600); border-color: var(--blue-600); color: white; }
+.pt-tabs input[type=date] { margin-left: auto; padding: 6px 8px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-family: inherit; font-size: 13px; background: white; color: var(--gray-900); }
+.pt-tit { font-size: 13px; color: var(--gray-600); margin-bottom: 10px; }
+.pt-k { margin-bottom: 14px; }
+@media (max-width: 520px) { .th-grid { grid-template-columns: 1fr; gap: 2px; } .th-v { margin-bottom: 6px; } }
 </style>
 <body>
 
@@ -1139,6 +1159,7 @@ function ensureDefaults() {
 // ═══════════════════════════════════════════
 function saveLocal(sinMarcar) {
   if (!sinMarcar) state.cambiosSinSubir = true;   // se apaga al subir o descargar de la nube
+  try { tkAsignarNumeros(); } catch (e) { /* la numeración no debe impedir guardar */ }
   if (profilesData.activeId) {
     profilesData.profiles[profilesData.activeId] = state;
     localStorage.setItem(('atocha_profiles_v1' + lsSufijo()), JSON.stringify(profilesData));
@@ -1290,6 +1311,7 @@ function obFinish() {
 //  INIT
 // ═══════════════════════════════════════════
 function initApp() {
+  try { tkAsignarNumeros(); } catch (e) { /* ver saveLocal */ }
   const ns = document.getElementById('nav-salir'); if (ns) ns.style.display = AUTH_ON ? '' : 'none';
   if (state.dark) document.body.classList.add('dark'); else document.body.classList.remove('dark');
   document.getElementById('sb-company').textContent = state.company;
@@ -1491,7 +1513,7 @@ function getAllTasks() {
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
   embList().forEach(p => (p.actividades || []).forEach(a => all.push({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '',
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   })));
   return all;
@@ -1899,7 +1921,7 @@ function isoALocal(iso) {
 function tkDeEmb(p) {
   return (p.actividades || []).map(a => ({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '',
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   }));
 }
@@ -1942,7 +1964,7 @@ function tkFila(ctx, t, n, hoy, o) {
     <div class="dt-fila">
       <div class="dt-main"${nav}>
         <div class="ti-name">${t.name}</div>
-        <div class="ti-meta">${o.sinOrigen ? (t.date ? (venc ? '<span style="color:var(--red);font-weight:700">' + formatDate(t.date) + ' (vencida)</span>' : formatDate(t.date)) : 'sin fecha') : meta}${o.prio && t.priority ? ' · <span class="task-priority p-' + t.priority + '">' + t.priority + '</span>' : ''}${o.sinOrigen && t.done && t.doneDate ? ' · ✅ ' + formatDate(t.doneDate) : ''}${o.sinOrigen ? repTag(t) : ''}</div>
+        <div class="ti-meta">${tkNumChip(t, ctx === 'ficha')}${o.sinOrigen ? (t.date ? (venc ? '<span style="color:var(--red);font-weight:700">' + formatDate(t.date) + ' (vencida)</span>' : formatDate(t.date)) : 'sin fecha') : meta}${o.prio && t.priority ? ' · <span class="task-priority p-' + t.priority + '">' + t.priority + '</span>' : ''}${o.sinOrigen && t.done && t.doneDate ? ' · ✅ ' + formatDate(t.doneDate) : ''}${o.sinOrigen ? repTag(t) : ''}</div>
       </div>
       <div class="dt-acts">
         <button type="button" class="dt-btn" title="${t.done ? 'Reabrir' : 'Marcar como cumplida'}" onclick="tkAccion('${ctx}','hecha',${n})">${t.done ? '↩' : '✓'}</button>
@@ -2644,7 +2666,7 @@ function renderChecklistItems() {
     const pid = t.projectId || '';
     return `<div class="task-row ${t.done?'done':''}">
       <div class="task-check ${t.done?'checked':''}" onclick="toggleCL('${pid}','${t.id}')">${t.done?'✓':''}</div>
-      <div class="task-name">${t.name}<div style="font-size:11px;color:var(--gray-400);font-weight:400;">${t.projectName}</div></div>
+      <div class="task-name">${t.name}<div style="font-size:11px;color:var(--gray-400);font-weight:400;">${tkNumChip(t)} ${t.projectName}</div></div>
       ${t.date ? `<div class="task-date ${isOverdue?'overdue':''}">${formatDate(t.date)}</div>` : ''}
       <span class="task-priority p-${t.priority}">${t.priority}</span>
       ${t.done && t.doneDate ? `<div class="task-done-date">✅ ${formatDate(t.doneDate)}</div>` : ''}
@@ -3428,6 +3450,7 @@ function embActsHtml(p) {
     const aid = embAttr(a.id);
     return `<div class="emb-act-wrap"><div class="emb-act${a.hecha ? ' done' : ''}">
       <label class="emb-actl"><input type="checkbox"${a.hecha ? ' checked' : ''} onchange="embToggleAct('${aid}')"><span class="emb-act-txt">${escHtml(a.texto)}</span></label>
+      ${tkNumChip(a, true)}
       ${a.fecha ? `<span class="emb-act-date${late ? ' late' : ''}">${formatDate(a.fecha)}${late ? ' (vencida)' : ''}</span>` : ''}
       ${soBotonHtml(a.id, `soDesdeActividad('${aid}')`)}
       <button class="emb-x" type="button" title="Reprogramar" onclick="embActPanel('${aid}','fecha')">📅</button>
@@ -5166,7 +5189,8 @@ td{border-bottom:1px solid #E2E8F0;padding:5px 8px;vertical-align:top}td:first-c
 .vacio{color:#94A3B8;font-style:italic}.mut{color:#64748B}.url{color:#64748B;font-size:10px;overflow-wrap:anywhere}
 .bar{height:9px;background:#E2E8F0;border-radius:5px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:#2563EB}
 .foot{margin-top:26px;font-size:10px;color:#94A3B8;border-top:1px solid #E2E8F0;padding-top:6px}
-a{color:#1D4ED8;text-decoration:none}`;
+a{color:#1D4ED8;text-decoration:none}
+.lineas i{display:block;border-bottom:1px solid #94A3B8;height:26px}.firmas{display:flex;gap:40px;margin-top:46px}.firmas div{flex:1;border-top:1px solid #0F172A;padding-top:4px;font-size:11px;color:#64748B}`;
 function impDoc(titulo, sub, cuerpo) {
   const hoy = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${escHtml(titulo)} · ${escHtml(state.company)}</title><style>${IMP_CSS}</style></head><body>
@@ -5221,10 +5245,11 @@ function impEmpresaHtml(pid) {
   const p = embList().find(x => x.id === pid); if (!p) return '';
   const m = p.moduleId && state.modules.find(x => x.id === p.moduleId);
   const fila = (k, v) => v ? `<dt>${k}</dt><dd>${escHtml(v)}</dd>` : '';
+  const filaF = (k, v) => `<dt>${k}</dt><dd>${v ? escHtml(v) : '<span class="vacio">Sin registrar</span>'}</dd>`;   // los datos de contacto siempre se muestran
   let h = `<h2>Datos</h2><dl class="dato">
     ${fila('Qué fabrica o vende', p.rubro)}${fila('Etapa', embNombreEtapaP(p))}${fila('Proyecto', m ? m.name : '')}
-    ${p.mensualidad ? fila('Mensualidad', fmtCOP(Number(p.mensualidad))) : ''}${p.valorProyecto ? fila('Valor del proyecto', fmtCOP(Number(p.valorProyecto))) : ''}
-    ${fila('Servicios', (p.servicios || []).join(', '))}${fila('Contacto', p.contacto)}${fila('WhatsApp o teléfono', p.telefono)}${fila('Correo', p.email)}${fila('Ciudad o país', p.ciudad)}${fila('Responsable', p.responsable)}${fila('Motivo si se perdió', p.motivoPerdido)}</dl>`;
+    ${filaF('Mensualidad', Number(p.mensualidad) ? fmtCOP(Number(p.mensualidad)) : '')}${p.valorProyecto ? fila('Valor del proyecto', fmtCOP(Number(p.valorProyecto))) : ''}
+    ${fila('Servicios', (p.servicios || []).join(', '))}${filaF('Persona de contacto', p.contacto)}${filaF('WhatsApp o teléfono', p.telefono)}${filaF('Correo', p.email)}${fila('Ciudad o país', p.ciudad)}${fila('Responsable', p.responsable)}${fila('Motivo si se perdió', p.motivoPerdido)}</dl>`;
   const pend = embPendientes(p), hechas = (p.actividades || []).filter(a => a.hecha).sort((a, b) => (a.fechaHecha || '') < (b.fechaHecha || '') ? 1 : -1).slice(0, 10);
   h += `<h2>Actividades pendientes (${pend.length})</h2>` + impTabla([{ t: 'Actividad' }, { t: 'Fecha' }], pend.map(a => [escHtml(a.texto), a.fecha ? formatDate(a.fecha) : 'Sin fecha']), 'Sin actividades pendientes.');
   if (hechas.length) h += `<h2>Últimas actividades hechas</h2>` + impTabla([{ t: 'Actividad' }, { t: 'Hecha el' }], hechas.map(a => [escHtml(a.texto), a.fechaHecha ? formatDate(a.fechaHecha) : '—']), '');
@@ -5258,11 +5283,188 @@ function impEscogerHtml() {
     ${fila('Informe de un proyecto', 'Cifra, avance, tareas, embudo y soportes.', `<select id="imp-proy">${proys.length ? proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('') : '<option value="">No hay proyectos</option>'}</select>`, `<button type="button" class="btn-add" onclick="impProyecto(document.getElementById('imp-proy').value)">Imprimir</button>`)}
     ${fila('Ficha de una empresa', 'Datos, actividades, novedades y soportes.', `<select id="imp-emp">${emp.length ? emp.map(p => opt(p.id, p.nombre)).join('') : '<option value="">No hay empresas</option>'}</select>`, `<button type="button" class="btn-add" onclick="impEmpresa(document.getElementById('imp-emp').value)">Imprimir</button>`)}
     ${fila('Registro de soportes', 'La tabla numerada de documentos.', `<select id="imp-sop"><option value="">Todos los proyectos</option>${proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('')}<option value="__none">Sin proyecto</option></select>`, `<button type="button" class="btn-add" onclick="impSoportes(document.getElementById('imp-sop').value)">Imprimir</button>`)}
+    ${fila('Parte diario, semanal o mensual', 'Tareas cumplidas y pendientes, novedades, soportes e ingresos del periodo, con tus observaciones al final.', '', `<button type="button" class="btn-add" onclick="parteAbrir('d')">Armar parte</button>`)}
     ${fila('Resumen general del negocio', 'Metas, proyectos, ingresos y embudo, para socios o inversores.', '', `<button type="button" class="btn-add" onclick="reporteInversores()">Imprimir</button>`)}
     ${fila('Todas las tareas', 'Tareas de cada proyecto y del Checklist Maestro.', '', `<button type="button" class="btn-add" onclick="printReport()">Imprimir</button>`)}
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cerrar</button></div>`;
 }
 function impMenu() { setModal(impEscogerHtml(), 620); }
+
+// ═══════════════════════════════════════════════════════════
+//  NÚMERO DE TAREA, HOJA DE LA TAREA y PARTES (diario, semanal, mensual)
+//  Cada tarea recibe un número fijo T-AAAAMMDD-NN (fecha en que se crea y consecutivo del día).
+// ═══════════════════════════════════════════════════════════
+function tkTodas() {
+  const r = [];
+  (state.modules || []).forEach(m => (m.tasks || []).forEach(o => r.push({ o, kind: 'mod', dueno: m, proy: m.name })));
+  (state.checklist || []).forEach(o => r.push({ o, kind: 'cl', dueno: null, proy: 'Checklist Maestro' }));
+  embList().forEach(p => (p.actividades || []).forEach(o => r.push({ o, kind: 'emb', dueno: p, proy: 'Embudo · ' + p.nombre })));
+  return r;
+}
+const tkX = {
+  nombre: x => x.kind === 'emb' ? x.o.texto : x.o.name,
+  fecha: x => (x.kind === 'emb' ? x.o.fecha : x.o.date) || '',
+  hecha: x => x.kind === 'emb' ? !!x.o.hecha : !!x.o.done,
+  fechaHecha: x => (x.kind === 'emb' ? x.o.fechaHecha : x.o.doneDate) || ''
+};
+function tkMsDeId(o) { const m = /_(\d{13})/.exec(String(o.id || '')); return m ? Number(m[1]) : 0; }
+function tkAsignarNumeros() {
+  const todas = tkTodas(), max = {};
+  todas.forEach(x => { const m = /^T-(\d{8})-(\d+)$/.exec(x.o.num || ''); if (m) max[m[1]] = Math.max(max[m[1]] || 0, +m[2]); });
+  const sin = todas.filter(x => !x.o.num); if (!sin.length) return;
+  const ahora = Date.now();
+  sin.forEach(x => { x.ms = tkMsDeId(x.o) || ahora; });
+  sin.sort((a, b) => a.ms - b.ms).forEach(x => {
+    const f = /^\d{4}-\d{2}-\d{2}$/.test(x.o.creada || '') ? x.o.creada : isoALocal(new Date(x.ms).toISOString());
+    const d8 = f.replace(/-/g, '');
+    max[d8] = (max[d8] || 0) + 1;
+    x.o.creada = f; x.o.num = 'T-' + d8 + '-' + String(max[d8]).padStart(2, '0');
+  });
+}
+function tkNumChip(t, sinClic) {
+  if (t && t.num && sinClic) return `<span class="tk-num" title="Número de la tarea">${escHtml(t.num)}</span>`;   // dentro de la ficha no se abre otra ventana: se perdería lo que estés escribiendo
+  return t && t.num ? `<button type="button" class="tk-num" onclick="event.stopPropagation();tkHoja('${embAttr(t.id)}')" title="Abrir la hoja de esta tarea">${escHtml(t.num)}</button>` : '';
+}
+function tkBuscarPorId(id) { return tkTodas().find(x => x.o.id === id) || null; }
+
+// ── Hoja de la tarea ──
+function tkHoja(id) {
+  const x = tkBuscarPorId(id); if (!x) { showToast('No encontré esa tarea'); return; }
+  const o = x.o, hecha = tkX.hecha(x), fecha = tkX.fecha(x), hoy = embToday();
+  const venc = !hecha && fecha && fecha < hoy;
+  const sops = soDe(o.id).sort((a, b) => a.n - b.n);
+  const fila = (k, v) => `<div class="th-k">${k}</div><div class="th-v">${v}</div>`;
+  setModal(`<div class="th">
+    <div class="th-top"><span class="tk-num grande">${escHtml(o.num || '')}</span>
+      <span class="th-est ${hecha ? 'ok' : venc ? 'mal' : ''}">${hecha ? 'Cumplida' : venc ? 'Vencida' : 'Pendiente'}</span></div>
+    <h3 class="th-nombre">${escHtml(tkX.nombre(x))}</h3>
+    <div class="th-grid">
+      ${fila('Proyecto o empresa', escHtml(x.proy))}
+      ${fila('Creada', o.creada ? formatDate(o.creada) : '—')}
+      ${fila('Fecha límite', fecha ? `<span${venc ? ' style="color:var(--red);font-weight:700"' : ''}>${formatDate(fecha)}</span>` : 'Sin fecha')}
+      ${x.kind !== 'emb' && o.priority ? fila('Prioridad', escHtml(o.priority)) : ''}
+      ${hecha ? fila('Cumplida el', tkX.fechaHecha(x) ? formatDate(tkX.fechaHecha(x)) : '—') : ''}
+      ${o.repite && REPITE[o.repite] ? fila('Se repite', escHtml(REPITE[o.repite])) : ''}
+    </div>
+    <div class="modal-field"><label>Avance o notas de esta tarea</label>
+      <textarea id="th-notas" rows="4" placeholder="Qué se hizo, con quién se habló, qué falta…" maxlength="4000">${escHtml(o.notas || '')}</textarea></div>
+    <div class="th-sec"><div class="th-sec-t">Soportes (${sops.length})</div>
+      ${sops.length ? soTabla(sops, { sinDonde: true }) : '<div class="emb-none">Esta tarea aún no tiene soportes.</div>'}
+      <div class="dt-panel so-panel" id="so-th"></div>
+      <button type="button" class="edit-btn" style="margin-top:8px" onclick="thSoporte('${embAttr(o.id)}')">📎 Agregar soporte</button></div>
+    <div class="th-sec"><div class="th-sec-t">Entregar un parte</div>
+      <div class="th-partes">
+        <button type="button" class="edit-btn" onclick="thGuardarNotas('${embAttr(o.id)}');parteAbrir('d','${embAttr(fecha || hoy)}')">Parte del día</button>
+        <button type="button" class="edit-btn" onclick="thGuardarNotas('${embAttr(o.id)}');parteAbrir('s','${embAttr(fecha || hoy)}')">Parte de la semana</button>
+        <button type="button" class="edit-btn" onclick="thGuardarNotas('${embAttr(o.id)}');parteAbrir('m','${embAttr(fecha || hoy)}')">Parte del mes</button>
+      </div>
+      <div class="so-ayuda">Se arma con la fecha límite de esta tarea (o la de hoy si no tiene).</div></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="thCerrar('${embAttr(o.id)}')">Cerrar</button>
+      <button class="btn-confirm" onclick="thAlternar('${embAttr(o.id)}')">${hecha ? '↩ Reabrir' : '✓ Marcar como cumplida'}</button>
+    </div></div>`, 600);
+}
+function thGuardarNotas(id) {
+  const x = tkBuscarPorId(id), t = document.getElementById('th-notas'); if (!x || !t) return;
+  const v = t.value.trim().slice(0, 4000);
+  if ((x.o.notas || '') !== v) { if (v) x.o.notas = v; else delete x.o.notas; saveLocal(); }
+}
+function thRefrescarVista() { const p = currentPage; if (p) goPage(p); }
+function thCerrar(id) { thGuardarNotas(id); closeModal(); thRefrescarVista(); }
+function thAlternar(id) {
+  thGuardarNotas(id);
+  const x = tkBuscarPorId(id); if (!x) return;
+  const o = x.o, emb = x.kind === 'emb', era = tkX.hecha(x);
+  if (emb) { o.hecha = !era; o.fechaHecha = era ? '' : embToday(); } else { o.done = !era; o.doneDate = era ? null : embToday(); }
+  if (!era) repAlCompletar(x.kind, o, x.dueno);
+  saveLocal(); renderSidebar(); showToast(era ? '↩ Tarea reabierta' : '✅ Tarea cumplida');
+  tkHoja(id);
+}
+function thSoporte(id) {
+  const x = tkBuscarPorId(id); if (!x) return;
+  const c = { origen: 'tarea', origenId: x.o.id, origenTxt: tkX.nombre(x), onDone: () => { tkHoja(id); } };
+  if (x.kind === 'mod') c.moduleId = x.dueno.id;
+  else if (x.kind === 'emb') { c.moduleId = x.dueno.moduleId || ''; c.pid = x.dueno.id; c.empresa = x.dueno.nombre; }
+  else c.proyecto = 'Checklist Maestro';
+  thGuardarNotas(id);
+  soAbrir('so-th', c);
+}
+
+// ── Partes: diario, semanal, mensual ──
+const PARTE_N = { d: 'Parte diario', s: 'Parte semanal', m: 'Parte mensual' };
+function fStr(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function parteRango(tipo, ref) {
+  const d = fechaLocal(ref); if (isNaN(d)) return parteRango(tipo, embToday());
+  if (tipo === 's') { const lun = new Date(d); lun.setDate(d.getDate() - ((d.getDay() + 6) % 7)); const dom = new Date(lun); dom.setDate(lun.getDate() + 6); return [fStr(lun), fStr(dom)]; }
+  if (tipo === 'm') return [fStr(new Date(d.getFullYear(), d.getMonth(), 1)), fStr(new Date(d.getFullYear(), d.getMonth() + 1, 0))];
+  return [fStr(d), fStr(d)];
+}
+function parteClave(tipo, ref) { const [a] = parteRango(tipo, ref); return tipo === 'm' ? 'm:' + a.slice(0, 7) : tipo + ':' + a; }
+function parteCodigo(tipo, ref) { const [a] = parteRango(tipo, ref); return 'P' + tipo.toUpperCase() + '-' + (tipo === 'm' ? a.slice(0, 7).replace('-', '') : a.replace(/-/g, '')); }
+function parteTitulo(tipo, ref) { const t = parteTitulo0(tipo, ref); return t.charAt(0).toUpperCase() + t.slice(1); }
+function parteTitulo0(tipo, ref) {
+  const [a, b] = parteRango(tipo, ref), L = f => fechaLocal(f).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+  if (tipo === 'd') return fechaLocal(a).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (tipo === 'm') return fechaLocal(a).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+  return 'Semana del ' + fechaLocal(a).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }) + ' al ' + L(b);
+}
+function parteDatos(tipo, ref) {
+  const [a, b] = parteRango(tipo, ref), en = f => f && f >= a && f <= b;
+  const todas = tkTodas().map(x => ({ x, num: x.o.num || '', nombre: tkX.nombre(x), proy: x.proy, fecha: tkX.fecha(x), hecha: tkX.hecha(x), fh: tkX.fechaHecha(x), creada: x.o.creada || '' }));
+  const cumplidas = todas.filter(t => t.hecha && en(t.fh)).sort((p, q) => (p.fh + p.num).localeCompare(q.fh + q.num));
+  const creadas = todas.filter(t => en(t.creada));
+  const pendientes = todas.filter(t => !t.hecha && t.fecha && t.fecha <= b).sort((p, q) => p.fecha.localeCompare(q.fecha));
+  const venc = pendientes.filter(t => t.fecha < a);
+  const nov = [];
+  embList().forEach(p => (p.bitacora || []).forEach(n => { const f = isoALocal(n.fecha); if (en(f)) nov.push({ f, iso: n.fecha, empresa: p.nombre, texto: n.texto, contacto: !!n.contacto }); }));
+  nov.sort((p, q) => String(p.iso).localeCompare(String(q.iso)));
+  const sops = soList().filter(s => en(s.fecha)).sort((p, q) => p.n - q.n);
+  const ing = (state.ingresos || []).filter(i => en(i.fecha));
+  return { a, b, cumplidas, creadas, pendientes, venc, nov, contactos: nov.filter(n => n.contacto).length, etapas: nov.filter(n => /^Etapa:/.test(n.texto)).length, sops, ing, ingTotal: ing.reduce((t, i) => t + (Number(i.monto) || 0), 0) };
+}
+function parteHtml(tipo, ref) {
+  const d = parteDatos(tipo, ref), nota = ((state.partes || {})[parteClave(tipo, ref)] || {}).nota || '';
+  const chip = t => t.num ? `<span class="url" style="white-space:nowrap">${escHtml(t.num)}</span>` : '';
+  const k = (t, v) => `<div><span>${t}</span><b>${v}</b></div>`;
+  let h = `<div class="kpi">${k('Tareas cumplidas', d.cumplidas.length)}${k('Tareas creadas', d.creadas.length)}${k('Pendientes', d.pendientes.length)}${k('Vencidas antes del periodo', d.venc.length)}</div>
+    <div class="kpi">${k('Novedades', d.nov.length)}${k('Contactos', d.contactos)}${k('Cambios de etapa', d.etapas)}${k('Soportes', d.sops.length)}${k('Ingresos', fmtCOP(d.ingTotal))}</div>`;
+  h += `<h2>Tareas cumplidas (${d.cumplidas.length})</h2>` + impTabla([{ t: 'N° de tarea' }, { t: 'Tarea' }, { t: 'Proyecto o empresa' }, { t: 'Cumplida el' }], d.cumplidas.map(t => [escHtml(t.num), escHtml(t.nombre), escHtml(t.proy), t.fh ? formatDate(t.fh) : '—']), 'No se cumplió ninguna tarea en este periodo.');
+  h += `<h2>Pendientes hasta el cierre (${d.pendientes.length})</h2>` + impTabla([{ t: 'N° de tarea' }, { t: 'Tarea' }, { t: 'Proyecto o empresa' }, { t: 'Fecha límite' }], d.pendientes.map(t => [escHtml(t.num), escHtml(t.nombre), escHtml(t.proy), formatDate(t.fecha) + (t.fecha < d.a ? ' (vencida)' : '')]), 'No quedan tareas pendientes con fecha hasta el cierre.');
+  h += `<h2>Novedades y contactos (${d.nov.length})</h2>` + (d.nov.length ? d.nov.map(n => `<div class="nov"><small>${n.contacto ? 'Contacto · ' : ''}${escHtml(embFechaHora(n.iso))} · ${escHtml(n.empresa)}</small>${escHtml(n.texto)}</div>`).join('') : '<div class="vacio">Sin novedades en este periodo.</div>');
+  h += `<h2>Soportes cargados (${d.sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(d.sops), 'No se cargaron soportes en este periodo.');
+  if (d.ing.length) h += `<h2>Ingresos registrados</h2>` + impTabla([{ t: 'Fecha' }, { t: 'Concepto' }, { t: 'Monto', n: 1 }], d.ing.map(i => [formatDate(i.fecha), escHtml(i.concepto || ''), fmtCOP(Number(i.monto) || 0)]), '');
+  h += `<h2>Observaciones</h2>` + (nota ? `<p style="white-space:pre-wrap;border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px">${escHtml(nota)}</p>` : `<div class="lineas"><i></i><i></i><i></i><i></i></div>`);
+  h += `<div class="firmas"><div>Elaboró</div><div>Revisó</div></div>`;
+  return impDoc(PARTE_N[tipo], parteCodigo(tipo, ref) + ' · ' + parteTitulo(tipo, ref), h);
+}
+let _parte = { tipo: 'd', ref: '' };
+function parteAbrir(tipo, ref) {
+  _parte = { tipo: PARTE_N[tipo] ? tipo : 'd', ref: /^\d{4}-\d{2}-\d{2}$/.test(ref || '') ? ref : embToday() };
+  const d = parteDatos(_parte.tipo, _parte.ref), nota = ((state.partes || {})[parteClave(_parte.tipo, _parte.ref)] || {}).nota || '';
+  const tab = (t, n) => `<button type="button" class="pt-tab${_parte.tipo === t ? ' act' : ''}" onclick="parteCambiar('${t}')">${n}</button>`;
+  const k = (t, v) => `<div><span>${t}</span><b>${v}</b></div>`;
+  setModal(`<h3>Entregar un parte</h3>
+    <div class="pt-tabs">${tab('d', 'Diario')}${tab('s', 'Semanal')}${tab('m', 'Mensual')}
+      <input type="date" id="pt-ref" value="${embAttr(_parte.ref)}" onchange="parteCambiar(null,this.value)" title="Fecha de referencia"></div>
+    <div class="pt-tit"><b>${escHtml(parteCodigo(_parte.tipo, _parte.ref))}</b> · ${escHtml(parteTitulo(_parte.tipo, _parte.ref))}</div>
+    <div class="dash-resumen pt-k">${k('Cumplidas', d.cumplidas.length)}${k('Pendientes', d.pendientes.length)}${k('Novedades', d.nov.length)}${k('Soportes', d.sops.length)}</div>
+    <div class="modal-field"><label>Tus observaciones (van al final del parte)</label>
+      <textarea id="pt-nota" rows="5" maxlength="4000" placeholder="Qué salió bien, qué quedó pendiente, qué se necesita…">${escHtml(nota)}</textarea></div>
+    <div class="so-ayuda">Atocha arma el resto con las tareas cumplidas y pendientes, novedades, soportes e ingresos del periodo. Al imprimir puedes elegir "Guardar como PDF".</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="parteGuardar();closeModal()">Cerrar</button><button class="btn-confirm" onclick="parteImprimir()">🖨 Imprimir o guardar PDF</button></div>`, 560);
+}
+function parteGuardar() {
+  const t = document.getElementById('pt-nota'); if (!t) return;
+  const v = t.value.trim().slice(0, 4000), k = parteClave(_parte.tipo, _parte.ref);
+  if (!state.partes || typeof state.partes !== 'object') state.partes = {};
+  if (v) state.partes[k] = { nota: v, cuando: new Date().toISOString() }; else delete state.partes[k];
+  saveLocal();
+}
+function parteCambiar(tipo, ref) {
+  parteGuardar();
+  parteAbrir(tipo || _parte.tipo, ref || _parte.ref);
+}
+function parteImprimir() { parteGuardar(); impLanzar(parteHtml(_parte.tipo, _parte.ref)); }
 
 </script>
 </body>
