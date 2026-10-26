@@ -796,6 +796,9 @@ a.so-link:hover { text-decoration: underline; }
 .imp-c select { flex: 1 1 160px; min-width: 0; padding: 9px 10px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; background: white; color: var(--gray-900); font-family: inherit; }
 .dark .imp-c select { background: var(--gray-800); color: var(--gray-100); border-color: var(--gray-600); }
 
+.mcod { display:inline-block; font-family: ui-monospace, Consolas, monospace; font-size:10px; font-weight:700; letter-spacing:.2px; color:var(--blue-700,#1D4ED8); background:var(--blue-50,#EFF6FF); border-radius:5px; padding:1px 5px; margin-right:6px; vertical-align:1px; white-space:nowrap; }
+.sidebar .mcod { background:rgba(255,255,255,.12); color:#E5E7EB; }
+.dark .mcod { background:rgba(96,165,250,.15); color:#93C5FD; }
 .tk-num { display: inline-block; border: none; cursor: pointer; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; font-weight: 700; letter-spacing: .2px; color: var(--blue-700); background: var(--blue-50); border-radius: 5px; padding: 1px 6px; margin-right: 6px; vertical-align: 1px; }
 .tk-num:hover { background: #DBEAFE; }
 .dark .tk-num { background: rgba(96,165,250,.15); color: #93C5FD; }
@@ -1105,6 +1108,9 @@ function iconoClave(icon, nombre) {
   }
   return EMOJI_A_ICONO[e] || (e === '' ? 'folder' : 'coin');
 }
+function modTxt(m) { return m ? (m.cod ? m.cod + ' · ' : '') + (m.name || '') : ''; }
+function modChip(m) { return m && m.cod ? '<span class="mcod">' + escHtml(m.cod) + '</span>' : ''; }
+function modPorId(id) { return id ? (state.modules || []).find(x => x.id === id) : null; }
 function modIco(m, size) { return ico(iconoClave(m && m.icon, m && m.name), size); }
 function pintarIconos() {
   document.querySelectorAll('[data-i]').forEach(el => { if (!el.dataset.ok) { el.innerHTML = ico(el.dataset.i, +el.dataset.z || 18); el.dataset.ok = '1'; } });
@@ -1449,7 +1455,7 @@ function renderSidebar() {
   mods.innerHTML = state.modules.map(m => {
     const p = m.tasks.filter(t => !t.done).length;
     return `<div class="nav-item" onclick="goPage('mod_${m.id}')" id="nav-mod_${m.id}">
-      <span class="ni">${modIco(m, 18)}</span><span class="nn">${escHtml(m.name)}</span>
+      <span class="ni">${modIco(m, 18)}</span><span class="nn">${modChip(m)}${escHtml(m.name)}</span>
       ${p > 0 ? `<span class="badge">${p}</span>` : ''}
     </div>`;
   }).join('');
@@ -1518,7 +1524,7 @@ function getPageTitle(page) {
   if (page.startsWith('mod_')) {
     const id = page.replace('mod_', '');
     const m = state.modules.find(x => x.id === id);
-    return m ? m.name : 'Proyecto';
+    return m ? modTxt(m) : 'Proyecto';
   }
   return 'Atocha';
 }
@@ -1533,7 +1539,7 @@ function fechaLocal(s) {
 }
 function getAllTasks() {
   let all = [];
-  state.modules.forEach(m => m.tasks.forEach(t => all.push({...t, name: escHtml(t.name), projectName: escHtml(m.name), projectId: m.id})));
+  state.modules.forEach(m => m.tasks.forEach(t => all.push({...t, name: escHtml(t.name), projectName: escHtml(modTxt(m)), projectId: m.id})));
   state.checklist.forEach(t => all.push({...t, name: escHtml(t.name), projectName: 'Checklist Maestro', projectId: null}));
   // Actividades del Embudo: se reflejan aquí (Checklist, Dashboard y aviso rojo del menú),
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
@@ -1749,12 +1755,12 @@ function dashAbrir(clave) {
       <div class="dist-bar">
         ${ing.map((m,i) => {
           const w = meta ? Math.max((modAporte(m)/meta)*100, 1) : 0;
-          return `<div class="dist-seg" style="flex:${w};background:${COLORS[i%COLORS.length]}" title="${embAttr(m.name)}: ${fmtCOP(modAporte(m))}"></div>`;
+          return `<div class="dist-seg" style="flex:${w};background:${COLORS[i%COLORS.length]}" title="${embAttr(modTxt(m))}: ${fmtCOP(modAporte(m))}"></div>`;
         }).join('')}
       </div>
       ${ing.map((m,i) => `<div class="dash-fila">
         <div style="width:10px;height:10px;border-radius:3px;flex:none;background:${COLORS[i%COLORS.length]}"></div>
-        <span class="dash-fila-n">${escHtml(m.name)}</span>
+        <span class="dash-fila-n">${modChip(m)}${escHtml(m.name)}</span>
         <span class="dash-fila-p">${meta ? Math.round(modAporte(m)/meta*100) : 0}%</span>
         <b>${fmtCOP(modAporte(m))}</b>
       </div>`).join('')}` : '<div class="empty-panel">Aún no hay proyectos</div>'}`;
@@ -1952,7 +1958,7 @@ function tkDeEmb(p) {
   }));
 }
 function tkDeMod(m) {
-  return (m.tasks || []).map(t => ({ ...t, name: escHtml(t.name), projectName: escHtml(m.name), projectId: m.id }));
+  return (m.tasks || []).map(t => ({ ...t, name: escHtml(t.name), projectName: escHtml(modTxt(m)), projectId: m.id }));
 }
 function tkOrden(lista) {
   return lista.slice().sort((x, y) => (x.done - y.done) || (x.date || '9999').localeCompare(y.date || '9999'));
@@ -2193,7 +2199,7 @@ function ingNombreMes(ym) {
 function ingNombreProy(pid) {
   if (!pid) return 'General';
   const m = (state.modules || []).find(x => x.id === pid);
-  return m ? m.name : '(proyecto eliminado)';
+  return m ? modTxt(m) : '(proyecto eliminado)';
 }
 function ingSuma(lista) { return lista.reduce((t, i) => t + (Number(i.monto) || 0), 0); }
 function ingMesCambiar(d) {
@@ -2208,7 +2214,7 @@ function ingRefrescar() {
   dashIngresos();
 }
 function ingOpciones(sel) {
-  return `<option value="">General (sin proyecto)</option>` + (state.modules || []).map(m => `<option value="${embAttr(m.id)}" ${sel === m.id ? 'selected' : ''}>${escHtml(m.name)}</option>`).join('');
+  return `<option value="">General (sin proyecto)</option>` + (state.modules || []).map(m => `<option value="${embAttr(m.id)}" ${sel === m.id ? 'selected' : ''}>${escHtml(modTxt(m))}</option>`).join('');
 }
 function dashIngresos() {
   const ym = ingMes || ingMesActual(); ingMes = ym;
@@ -2329,7 +2335,7 @@ function dashMeta() {
     <div class="dash-sub">Por proyecto (de mayor a menor)</div>
     ${orden.length ? orden.map(({ m, i }) => `<div class="dash-fila dash-click-fila" onclick="closeModal();goPage('mod_${m.id}')">
         <div style="width:10px;height:10px;border-radius:3px;flex:none;background:${COLORS[i % COLORS.length]}"></div>
-        <span class="dash-fila-n">${escHtml(m.name)}${modTipo(m) === 'mensual' ? ' <span class="mod-tag">' + fmtCOP(m.meta) + ' × 12</span>' : ''}</span><span class="dash-fila-p">${pctDe(modAporte(m))}</span><b>${fmtCOP(modAporte(m))}</b>
+        <span class="dash-fila-n">${modChip(m)}${escHtml(m.name)}${modTipo(m) === 'mensual' ? ' <span class="mod-tag">' + fmtCOP(m.meta) + ' × 12</span>' : ''}</span><span class="dash-fila-p">${pctDe(modAporte(m))}</span><b>${fmtCOP(modAporte(m))}</b>
       </div>`).join('') : '<div class="empty-panel">Aún no hay proyectos</div>'}
     ${totalCapital() ? `<div class="dash-sub">Fuera de la meta</div>
       <div class="dash-fila dash-click-fila" onclick="dashCapital()"><span class="dash-fila-n">🏦 Capital que necesitas reunir (no es ingreso)</span><b>${fmtCOP(totalCapital())}</b></div>` : ''}
@@ -2354,7 +2360,7 @@ function dashCapital() {
     <div class="dash-prog"><div style="width:${Math.min(100, pct)}%;background:var(--green)"></div></div>
     <div class="dash-prog-txt">${pct}% del capital está aportado${conv ? ' · ' + fmtCOP(conv) + ' más en conversación con inversores' : ''}</div>
     <div class="dash-sub">Proyectos que lo necesitan</div>
-    ${proys.map(m => `<div class="dash-fila dash-click-fila" onclick="closeModal();goPage('mod_${m.id}')"><span class="dash-fila-n">${escHtml(m.name)}</span><span class="dash-fila-p">${req ? Math.round((m.meta || 0) / req * 100) : 0}%</span><b>${fmtCOP(m.meta)}</b></div>`).join('')}
+    ${proys.map(m => `<div class="dash-fila dash-click-fila" onclick="closeModal();goPage('mod_${m.id}')"><span class="dash-fila-n">${modChip(m)}${escHtml(m.name)}</span><span class="dash-fila-p">${req ? Math.round((m.meta || 0) / req * 100) : 0}%</span><b>${fmtCOP(m.meta)}</b></div>`).join('')}
     <div class="dash-sub">Inversores</div>
     ${invs.length ? invs.map(a => `<div class="dash-fila dash-click-fila" onclick="aliOpen('${a.id}')"><span class="dash-fila-n">${escHtml(a.nombre)}</span><span class="dash-fila-p">${aliEstadoNombre(a.estado)}</span><b>${fmtCOP(a.monto || 0)}</b></div>`).join('') : '<div class="empty-panel">Aún no hay inversores. Agrégalos con "+ Nuevo" → Inversor.</div>'}
     <div class="modal-actions">
@@ -2374,7 +2380,7 @@ function dashProyectos() {
     return `<div class="task-item dash-tarea dash-proy" onclick="closeModal();goPage('mod_${m.id}')">
       <div class="dash-proy-top">
         <span class="dash-proy-i">${modIco(m, 18)}</span>
-        <span class="dash-proy-n">${escHtml(m.name)}</span>
+        <span class="dash-proy-n">${modChip(m)}${escHtml(m.name)}</span>
         <b class="dash-proy-m">${fmtCOP(m.meta)}${modTag(m)}</b>
       </div>
       ${m.desc ? `<div class="ti-meta" style="margin:2px 0 6px">${escHtml(m.desc)}</div>` : ''}
@@ -2409,7 +2415,7 @@ function moduleCard(m) {
   return `<div class="module-card" onclick="goPage('mod_${m.id}')">
     ${pending > 0 ? `<div class="mc-badge-count">${pending}</div>` : ''}
     <div class="mc-icon">${modIco(m, 22)}</div>
-    <div class="mc-name">${escHtml(m.name)}</div>
+    <div class="mc-name">${modChip(m)}${escHtml(m.name)}</div>
     <div class="mc-desc">${escHtml(m.desc || '—')}</div>
     ${(() => { const ps = embDeProyecto(m.id); return ps.length ? `<div class="mc-emb">${ico('funnel', 13)}${ps.length} ${ps.length === 1 ? 'prospecto' : 'prospectos'} · ${ps.filter(p => p.etapa === 'activo').length} activos</div>` : ''; })()}
     <div class="mc-footer">
@@ -3017,7 +3023,7 @@ function renderEmbudo() {
     ${state.modules.length ? `<label>Proyecto
       <select onchange="embSetProy(this.value)">
         <option value="">Todos (${list.length})</option>
-        ${state.modules.map(m => `<option value="${embAttr(m.id)}"${embFiltroProy === m.id ? ' selected' : ''}>${escHtml(m.name)} (${list.filter(p => p.moduleId === m.id).length})</option>`).join('')}
+        ${state.modules.map(m => `<option value="${embAttr(m.id)}"${embFiltroProy === m.id ? ' selected' : ''}>${escHtml(modTxt(m))} (${list.filter(p => p.moduleId === m.id).length})</option>`).join('')}
         <option value="__none"${embFiltroProy === '__none' ? ' selected' : ''}>Sin proyecto (${list.filter(p => !p.moduleId).length})</option>
       </select></label>` : ''}
     ${responsables.length ? `<label>👤 Responsable
@@ -3227,7 +3233,7 @@ function embOpen(id, etapaForzada) {
       <input type="text" id="emb-resp" list="emb-resp-list" value="${v('responsable')}" placeholder="Quién le hace el seguimiento" autocomplete="off">
       <datalist id="emb-resp-list">${embResponsables().map(r => `<option value="${embAttr(r)}">`).join('')}</datalist>
     </div>
-    <div class="modal-field"><label>Proyecto vinculado <span class="emb-hint">sus tareas se ven también aquí</span></label><select id="emb-modulo" onchange="embRefreshEtapas()"><option value="">(ninguno)</option>${(state.modules || []).map(m => `<option value="${embAttr(m.id)}" ${(p ? p.moduleId === m.id : modPre === m.id) ? 'selected' : ''}>${escHtml(m.name)}</option>`).join('')}</select></div>
+    <div class="modal-field"><label>Proyecto vinculado <span class="emb-hint">sus tareas se ven también aquí</span></label><select id="emb-modulo" onchange="embRefreshEtapas()"><option value="">(ninguno)</option>${(state.modules || []).map(m => `<option value="${embAttr(m.id)}" ${(p ? p.moduleId === m.id : modPre === m.id) ? 'selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}</select></div>
     ${p ? `
     <div class="emb-sec">
       <div class="emb-sec-title">✅ Actividades por hacer</div>
@@ -4064,7 +4070,7 @@ function printReport() {
   <div class="meta">Meta total: ${fmtCOP(state.metaTotal)}</div>`;
 
   state.modules.forEach(m => {
-    html += `<h2>${escHtml(m.name)} — ${fmtCOP(m.meta)}</h2>`;
+    html += `<h2>${escHtml(modTxt(m))} — ${fmtCOP(m.meta)}</h2>`;
     if (!m.tasks.length) { html += `<p style="font-size:12px;color:#999">Sin tareas registradas.</p>`; return; }
     html += `<table><tr><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th><th>Cumplida</th></tr>`;
     m.tasks.forEach(t => {
@@ -4459,7 +4465,7 @@ function pronProy(modId) {
   const o = (state.embProbProy || {})[modId] || {};
   const filas = EMB_STAGES.filter(st => st.id !== 'activo' && st.id !== 'perdido').map(st => `<div class="pron-f pj"><span><i class="pron-dot" style="background:${st.color}"></i>${escHtml(st.name)}</span><span class="so-mut">general ${embProb(st.id)}%</span>
     <span><input type="number" min="0" max="100" id="pj-${st.id}" value="${o[st.id] === 0 || o[st.id] > 0 ? o[st.id] : ''}" placeholder="${embProb(st.id)}">%</span></div>`).join('');
-  setModal(`<h3>Probabilidades de ${escHtml(m.name)}</h3>
+  setModal(`<h3>Probabilidades de ${escHtml(modTxt(m))}</h3>
     <p class="bk-p">Cada proyecto cierra distinto. Escribe un porcentaje solo donde quieras cambiar el general; si lo dejas vacío, usa el general.</p>
     <div class="pron-tabla">${filas}</div>
     <div class="modal-actions"><button class="btn-cancel" onclick="dashPronostico()">Volver</button><button class="btn-confirm" onclick="pronProyGuardar('${embAttr(modId)}')">Guardar</button></div>`, 560);
@@ -4547,9 +4553,9 @@ function buscarRender() {
   const grupos = [];
   const add = (titulo, items) => { if (items.length) grupos.push({ titulo, items }); };
   const it = (nombre, detalle, accion) => ({ nombre, detalle, accion });
-  add('Proyectos', state.modules.filter(m => has(m.name, m.desc)).map(m => it(m.name, m.desc || '', `goPage('mod_${embAttr(m.id)}')`)));
+  add('Proyectos', state.modules.filter(m => has(m.name, m.desc, m.cod)).map(m => it(modTxt(m), m.desc || '', `goPage('mod_${embAttr(m.id)}')`)));
   const tareas = [];
-  state.modules.forEach(m => m.tasks.forEach(t => { if (has(t.name)) tareas.push(it(t.name, m.name + (t.date ? ' · ' + formatDate(t.date) : '') + (t.done ? ' · cumplida' : ''), `goPage('mod_${embAttr(m.id)}')`)); }));
+  state.modules.forEach(m => m.tasks.forEach(t => { if (has(t.name)) tareas.push(it(t.name, modTxt(m) + (t.date ? ' · ' + formatDate(t.date) : '') + (t.done ? ' · cumplida' : ''), `goPage('mod_${embAttr(m.id)}')`)); }));
   state.checklist.forEach(t => { if (has(t.name)) tareas.push(it(t.name, 'Checklist Maestro' + (t.date ? ' · ' + formatDate(t.date) : '') + (t.done ? ' · cumplida' : ''), `goPage('checklist')`)); });
   embList().forEach(p => (p.actividades || []).forEach(a => { if (has(a.texto)) tareas.push(it(a.texto, 'Embudo · ' + p.nombre + (a.fecha ? ' · ' + formatDate(a.fecha) : '') + (a.hecha ? ' · cumplida' : ''), `embOpen('${embAttr(p.id)}')`)); }));
   add('Tareas', tareas);
@@ -4695,7 +4701,7 @@ function reporteInversores() {
   if (inv.length) h += `<h2>Inversores</h2><table>${th('Nombre', 'Estado', '<span>Aporte</span>')}${inv.map(a => `<tr><td>${escHtml(a.nombre)}</td><td>${escHtml(aliEstadoNombre(a.estado))}</td><td class="n">${fmtCOP(a.monto || 0)}</td></tr>`).join('')}</table>`;
   h += `<h2>Proyectos</h2><table>${th('Proyecto', 'Tipo de cifra', 'Estado', 'Avance de tareas', '<span>Cifra</span>')}${state.modules.map(m => {
     const tot = m.tasks.length, ok = m.tasks.filter(t => t.done).length, st = (STATUSES.find(x => x.key === m.status) || STATUSES[0]);
-    return `<tr><td>${escHtml(m.name)}</td><td>${tipoN[modTipo(m)]}</td><td>${escHtml(st.label || st.name || m.status)}</td><td>${tot ? ok + ' de ' + tot + ' (' + Math.round(ok / tot * 100) + '%)' : '—'}</td><td class="n">${fmtCOP(m.meta)}</td></tr>`;
+    return `<tr><td>${escHtml(modTxt(m))}</td><td>${tipoN[modTipo(m)]}</td><td>${escHtml(st.label || st.name || m.status)}</td><td>${tot ? ok + ' de ' + tot + ' (' + Math.round(ok / tot * 100) + '%)' : '—'}</td><td class="n">${fmtCOP(m.meta)}</td></tr>`;
   }).join('')}</table>`;
   h += `<h2>Ingresos de los últimos 6 meses</h2><table>${th('Mes', '<span>Ingresos</span>')}${d.ing.map(x => `<tr><td>${x.l}</td><td class="n">${fmtCOP(x.v)}</td></tr>`).join('')}</table>`;
   h += `<h2>Embudo comercial</h2><div class="kpi"><div><span>Ya cobra por mes</span><b>${fmtCOP(pr.activo)}</b></div><div><span>Embudo ponderado</span><b>${fmtCOP(pr.pipe)}</b></div><div><span>Esperado por mes</span><b>${fmtCOP(pr.total)}</b></div></div>
@@ -4711,7 +4717,7 @@ function vistaActual() {
 }
 // Consolidado del Embudo por proyecto (mas "Sin proyecto"): sirve al pronóstico y al reporte.
 function embPorProyecto() {
-  const grupos = state.modules.map(m => ({ id: m.id, nombre: m.name, ps: embDeProyecto(m.id) })).filter(g => g.ps.length);
+  const grupos = state.modules.map(m => ({ id: m.id, nombre: modTxt(m), ps: embDeProyecto(m.id) })).filter(g => g.ps.length);
   const libres = embList().filter(p => !p.moduleId || !state.modules.some(m => m.id === p.moduleId));
   if (libres.length) grupos.push({ id: '', nombre: 'Sin proyecto', ps: libres });
   return grupos.map(g => {
@@ -4795,7 +4801,7 @@ function embEtapasRender() {
       <button type="button" class="dt-btn" ${i === 0 ? 'disabled' : ''} onclick="embEtapaMover(${i},-1)" title="Subir">↑</button>
       <button type="button" class="dt-btn" ${i === e.etapas.length - 1 ? 'disabled' : ''} onclick="embEtapaMover(${i},1)" title="Bajar">↓</button>
       <button type="button" class="dt-btn" onclick="embEtapaQuitar(${i})" title="Quitar">✕</button></div>`;
-  setModal(`<h3>Etapas y precio · ${escHtml(m.name)}</h3>
+  setModal(`<h3>Etapas y precio · ${escHtml(modTxt(m))}</h3>
     <p class="bk-p">Define las etapas de venta de este proyecto. Cada una "equivale" a una etapa del tablero general, que sigue mostrando todos los prospectos. Debe haber al menos una que equivalga a <b>Cliente activo</b> y otra a <b>Perdido o pausado</b>.</p>
     <div class="modal-field"><label>Mensualidad sugerida para los prospectos nuevos de este proyecto (COP)</label><input type="text" id="ee-fee" inputmode="numeric" value="${e.fee ? e.fee.toLocaleString('es-CO') : ''}" oninput="formatCOPInput(this);_ee.fee=parseCOP(this.value)" placeholder="Ej: 2.500.000"></div>
     <div class="ee-lista">${e.etapas.map(fila).join('')}</div>
@@ -5105,7 +5111,7 @@ let soFiltro = { proy: '', tipo: '', q: '' };
 function soFilas(l, o) {
   o = o || {};
   const orig = s => s.origen && s.origen !== 'manual' ? `<span class="so-pill so-o-${escHtml(s.origen)}">${SO_ORIGEN[s.origen] || ''}</span> ${escHtml(String(s.origenTxt || '').slice(0, 70))}` : '<span class="so-mut">Manual</span>';
-  const donde = s => [s.proyecto, s.empresa && s.empresa !== s.proyecto ? s.empresa : ''].filter(Boolean).map(escHtml).join(' · ') || '<span class="so-mut">—</span>';
+  const donde = s => [soProy(s), s.empresa && s.empresa !== s.proyecto ? s.empresa : ''].filter(Boolean).map(escHtml).join(' · ') || '<span class="so-mut">—</span>';
   return l.map(s => `<tr>
     <td class="so-n">${soCodigo(s)}</td>
     <td class="so-f">${formatDate(s.fecha)}</td>
@@ -5123,7 +5129,7 @@ function soTabla(l, o) {
 function soFiltrados() {
   const q = normTxt(soFiltro.q);
   return soList().filter(s => (!soFiltro.proy || (soFiltro.proy === '__none' ? !s.moduleId : s.moduleId === soFiltro.proy)) && (!soFiltro.tipo || s.tipo === soFiltro.tipo) &&
-    (!q || normTxt([s.titulo, s.tipo, s.proyecto, s.empresa, s.origenTxt, soCodigo(s)].join(' ')).indexOf(q) >= 0)).sort((a, b) => b.n - a.n);
+    (!q || normTxt([s.titulo, s.tipo, soProy(s), s.empresa, s.origenTxt, soCodigo(s)].join(' ')).indexOf(q) >= 0)).sort((a, b) => b.n - a.n);
 }
 function renderSoportes() {
   const todos = soList();
@@ -5137,7 +5143,7 @@ function renderSoportes() {
     </div>
     ${todos.length ? `<div class="so-filtros">
       <input type="text" id="so-q" placeholder="Buscar por título, proyecto, empresa…" value="${embAttr(soFiltro.q)}" oninput="soSetQ(this.value)">
-      <select onchange="soSetProy(this.value)"><option value="">Todos los proyectos</option>${state.modules.map(m => `<option value="${embAttr(m.id)}"${soFiltro.proy === m.id ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('')}<option value="__none"${soFiltro.proy === '__none' ? ' selected' : ''}>Sin proyecto</option></select>
+      <select onchange="soSetProy(this.value)"><option value="">Todos los proyectos</option>${state.modules.map(m => `<option value="${embAttr(m.id)}"${soFiltro.proy === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}<option value="__none"${soFiltro.proy === '__none' ? ' selected' : ''}>Sin proyecto</option></select>
       <select onchange="soSetTipo(this.value)"><option value="">Todos los tipos</option>${SO_TIPOS.map(t => `<option${soFiltro.tipo === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div><div id="so-lista"></div>` : `<div class="emb-none" style="padding:24px 4px">Todavía no hay soportes. Abre una novedad o una tarea y pulsa el clip, o crea uno con "+ Nuevo soporte".</div>`}
   </div>`;
@@ -5167,7 +5173,7 @@ function soModalHtml(titulo, s, modId) {
     <div class="modal-field"><label>Enlace de Drive</label><input type="text" id="so-u-m" value="${v('url')}" placeholder="https://drive.google.com/…" autocomplete="off"></div>
     <div class="modal-field"><label>Tipo</label><select id="so-k-m">${SO_TIPOS.map(t => `<option${s && s.tipo === t ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
     <div class="modal-field"><label>Fecha</label><input type="date" id="so-f-m" value="${embAttr(s ? s.fecha : embToday())}"></div>
-    <div class="modal-field"><label>Proyecto (opcional)</label><select id="so-p-m"><option value="">Sin proyecto</option>${state.modules.map(m => `<option value="${embAttr(m.id)}"${mod === m.id ? ' selected' : ''}>${escHtml(m.name)}</option>`).join('')}</select></div>
+    <div class="modal-field"><label>Proyecto (opcional)</label><select id="so-p-m"><option value="">Sin proyecto</option>${state.modules.map(m => `<option value="${embAttr(m.id)}"${mod === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}</select></div>
     <div class="modal-field"><label>Relacionado con (opcional)</label><input type="text" id="so-o-m" value="${v('origenTxt')}" placeholder="Ej: Reunión del 24/10, entrega de planillas" maxlength="200"></div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="soGuardarModal()">Guardar</button></div>`;
 }
@@ -5200,12 +5206,13 @@ function soEliminar(id) {
   state.soportes = soList().filter(x => x.id !== id);
   saveLocal(); showToast('🗑 Soporte eliminado'); soRefrescarVista();
 }
+function soProy(s) { const m = modPorId(s.moduleId); return m ? modTxt(m) : (s.proyecto || ''); }
 function soCsv() {
   const l = soFiltrados().slice().sort((a, b) => a.n - b.n);
   if (!l.length) { showToast('No hay soportes para descargar'); return; }
   const cel = v => { let s = String(v == null ? '' : v); if (/^[=@]|^[+\-](?!\d)/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
   const cab = ['N°', 'Fecha', 'Título', 'Enlace', 'Tipo', 'Proyecto', 'Empresa', 'Origen', 'Detalle del origen'];
-  const filas = l.map(s => [soCodigo(s), s.fecha, s.titulo, s.url, s.tipo, s.proyecto, s.empresa, SO_ORIGEN[s.origen] || 'Manual', s.origenTxt]);
+  const filas = l.map(s => [soCodigo(s), s.fecha, s.titulo, s.url, s.tipo, soProy(s), s.empresa, SO_ORIGEN[s.origen] || 'Manual', s.origenTxt]);
   const csv = '﻿' + [cab].concat(filas).map(f => f.map(cel).join(';')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -5269,7 +5276,7 @@ const impTabla = (cab, filas, vacio) => filas.length
   : `<div class="vacio">${vacio}</div>`;
 const impLinkSoporte = s => { const h = embUrlSegura(s.url); return `${h ? `<a href="${embAttr(h)}">${escHtml(s.titulo)}</a>` : escHtml(s.titulo)}<div class="url">${escHtml(h || '')}</div>`; };
 function impFilasSoportes(l) {
-  return l.map(s => [soCodigo(s), formatDate(s.fecha), impLinkSoporte(s), escHtml(s.tipo), escHtml([s.proyecto, s.empresa && s.empresa !== s.proyecto ? s.empresa : ''].filter(Boolean).join(' · ') || '—'), s.origen && s.origen !== 'manual' ? escHtml(SO_ORIGEN[s.origen] + ': ' + String(s.origenTxt || '').slice(0, 90)) : 'Manual']);
+  return l.map(s => [soCodigo(s), formatDate(s.fecha), impLinkSoporte(s), escHtml(s.tipo), escHtml([soProy(s), s.empresa && s.empresa !== s.proyecto ? s.empresa : ''].filter(Boolean).join(' · ') || '—'), s.origen && s.origen !== 'manual' ? escHtml(SO_ORIGEN[s.origen] + ': ' + String(s.origenTxt || '').slice(0, 90)) : 'Manual']);
 }
 const IMP_COL_SOP = [{ t: 'N°' }, { t: 'Fecha' }, { t: 'Documento' }, { t: 'Tipo' }, { t: 'Proyecto · Empresa' }, { t: 'Origen' }];
 
@@ -5294,7 +5301,7 @@ function impProyectoHtml(modId) {
     }), '');
   }
   h += `<h2>Soportes (${sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(sops), 'Este proyecto aún no tiene soportes.');
-  return impDoc('Informe del proyecto: ' + m.name, m.cod ? 'Proyecto ' + m.cod : '', h);
+  return impDoc('Informe del proyecto: ' + modTxt(m), '', h);
 }
 function impProyecto(modId) { const h = impProyectoHtml(modId); if (!h) { showToast('Elige un proyecto'); return; } impLanzar(h); }
 
@@ -5305,7 +5312,7 @@ function impEmpresaHtml(pid) {
   const fila = (k, v) => v ? `<dt>${k}</dt><dd>${escHtml(v)}</dd>` : '';
   const filaF = (k, v) => `<dt>${k}</dt><dd>${v ? escHtml(v) : '<span class="vacio">Sin registrar</span>'}</dd>`;   // los datos de contacto siempre se muestran
   let h = `<h2>Datos</h2><dl class="dato">
-    ${fila('Qué fabrica o vende', p.rubro)}${fila('Etapa', embNombreEtapaP(p))}${fila('Proyecto', m ? m.name : '')}
+    ${fila('Qué fabrica o vende', p.rubro)}${fila('Etapa', embNombreEtapaP(p))}${fila('Proyecto', m ? modTxt(m) : '')}
     ${filaF('Mensualidad', Number(p.mensualidad) ? fmtCOP(Number(p.mensualidad)) : '')}${p.valorProyecto ? fila('Valor del proyecto', fmtCOP(Number(p.valorProyecto))) : ''}
     ${fila('Servicios', (p.servicios || []).join(', '))}${filaF('Persona de contacto', p.contacto)}${filaF('WhatsApp o teléfono', p.telefono)}${filaF('Correo', p.email)}${fila('Ciudad o país', p.ciudad)}${fila('Responsable', p.responsable)}${fila('Motivo si se perdió', p.motivoPerdido)}</dl>`;
   const pend = embPendientes(p), hechas = (p.actividades || []).filter(a => a.hecha).sort((a, b) => (a.fechaHecha || '') < (b.fechaHecha || '') ? 1 : -1).slice(0, 10);
@@ -5325,7 +5332,7 @@ function impEmpresa(pid) { const h = impEmpresaHtml(pid); if (!h) { showToast('E
 function impSoportesHtml(modId) {
   const l = (modId === undefined ? soFiltrados() : soList().filter(s => !modId || (modId === '__none' ? !s.moduleId : s.moduleId === modId))).slice().sort((a, b) => a.n - b.n);
   const m = modId && modId !== '__none' ? state.modules.find(x => x.id === modId) : null;
-  const sub = m ? 'Proyecto: ' + m.name : modId === '__none' ? 'Sin proyecto' : (modId === undefined && (soFiltro.proy || soFiltro.tipo || soFiltro.q) ? 'Con los filtros aplicados' : 'Todos los proyectos');
+  const sub = m ? 'Proyecto: ' + modTxt(m) : modId === '__none' ? 'Sin proyecto' : (modId === undefined && (soFiltro.proy || soFiltro.tipo || soFiltro.q) ? 'Con los filtros aplicados' : 'Todos los proyectos');
   return impDoc('Registro de soportes', sub + ' · ' + l.length + ' documento(s)', impTabla(IMP_COL_SOP, impFilasSoportes(l), 'No hay soportes para mostrar.'));
 }
 function impSoportes(modId) { impLanzar(impSoportesHtml(modId)); }
@@ -5338,9 +5345,9 @@ function impEscogerHtml() {
   const fila = (t, d, ctl, btn) => `<div class="imp-fila"><div class="imp-t"><b>${t}</b><small>${d}</small></div><div class="imp-c">${ctl}${btn}</div></div>`;
   return `<h3>🖨 Imprimir o guardar en PDF</h3>
     <p class="bk-p">Se abre la ventana de impresión del navegador: elige tu impresora o "Guardar como PDF".</p>
-    ${fila('Informe de un proyecto', 'Cifra, avance, tareas, embudo y soportes.', `<select id="imp-proy">${proys.length ? proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('') : '<option value="">No hay proyectos</option>'}</select>`, `<button type="button" class="btn-add" onclick="impProyecto(document.getElementById('imp-proy').value)">Imprimir</button>`)}
+    ${fila('Informe de un proyecto', 'Cifra, avance, tareas, embudo y soportes.', `<select id="imp-proy">${proys.length ? proys.map(m => opt(m.id, modTxt(m), m.id === pagMod)).join('') : '<option value="">No hay proyectos</option>'}</select>`, `<button type="button" class="btn-add" onclick="impProyecto(document.getElementById('imp-proy').value)">Imprimir</button>`)}
     ${fila('Ficha de una empresa', 'Datos, actividades, novedades y soportes.', `<select id="imp-emp">${emp.length ? emp.map(p => opt(p.id, p.nombre)).join('') : '<option value="">No hay empresas</option>'}</select>`, `<button type="button" class="btn-add" onclick="impEmpresa(document.getElementById('imp-emp').value)">Imprimir</button>`)}
-    ${fila('Registro de soportes', 'La tabla numerada de documentos.', `<select id="imp-sop"><option value="">Todos los proyectos</option>${proys.map(m => opt(m.id, m.name, m.id === pagMod)).join('')}<option value="__none">Sin proyecto</option></select>`, `<button type="button" class="btn-add" onclick="impSoportes(document.getElementById('imp-sop').value)">Imprimir</button>`)}
+    ${fila('Registro de soportes', 'La tabla numerada de documentos.', `<select id="imp-sop"><option value="">Todos los proyectos</option>${proys.map(m => opt(m.id, modTxt(m), m.id === pagMod)).join('')}<option value="__none">Sin proyecto</option></select>`, `<button type="button" class="btn-add" onclick="impSoportes(document.getElementById('imp-sop').value)">Imprimir</button>`)}
     ${fila('Parte diario, semanal o mensual', 'Tareas cumplidas y pendientes, novedades, soportes e ingresos del periodo, con tus observaciones al final.', '', `<button type="button" class="btn-add" onclick="parteAbrir('d')">Armar parte</button>`)}
     ${fila('Resumen general del negocio', 'Metas, proyectos, ingresos y embudo, para socios o inversores.', '', `<button type="button" class="btn-add" onclick="reporteInversores()">Imprimir</button>`)}
     ${fila('Todas las tareas', 'Tareas de cada proyecto y del Checklist Maestro.', '', `<button type="button" class="btn-add" onclick="printReport()">Imprimir</button>`)}
@@ -5354,7 +5361,7 @@ function impMenu() { setModal(impEscogerHtml(), 620); }
 // ═══════════════════════════════════════════════════════════
 function tkTodas() {
   const r = [];
-  (state.modules || []).forEach(m => (m.tasks || []).forEach(o => r.push({ o, kind: 'mod', dueno: m, proy: m.name })));
+  (state.modules || []).forEach(m => (m.tasks || []).forEach(o => r.push({ o, kind: 'mod', dueno: m, proy: modTxt(m) })));
   (state.checklist || []).forEach(o => r.push({ o, kind: 'cl', dueno: null, proy: 'Checklist Maestro' }));
   embList().forEach(p => (p.actividades || []).forEach(o => r.push({ o, kind: 'emb', dueno: p, proy: 'Embudo · ' + p.nombre })));
   return r;
