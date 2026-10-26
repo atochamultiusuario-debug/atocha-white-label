@@ -659,6 +659,9 @@ button, input, select, textarea { font-family: inherit; }
 .pron-tabla { margin-top: 12px; font-size: 13px; }
 .pron-h, .pron-f { display: grid; grid-template-columns: 1.6fr .7fr 1.2fr .8fr 1.2fr; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--gray-200); }
 .pron-h { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--gray-400); font-weight: 700; }
+.pron-aj { border:1px solid var(--gray-300,#D1D5DB); background:transparent; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; padding:0 5px; color:var(--gray-400,#9CA3AF); }
+.pron-aj.on { background:#DBEAFE; color:#1D4ED8; border-color:#93C5FD; }
+.pron-f.pj { display:grid; grid-template-columns:1.4fr 1fr 1fr; align-items:center; gap:8px; }
 .pron-f input { width: 56px; padding: 4px 6px; border: 1.5px solid var(--gray-200); border-radius: 6px; background: var(--white); color: var(--gray-900); font-family: inherit; }
 .pron-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; }
 .pron-barra { height: 10px; border-radius: 5px; background: var(--gray-200); overflow: hidden; margin-top: 12px; }
@@ -781,6 +784,8 @@ a.so-link:hover { text-decoration: underline; }
 .so-ac .dt-btn { margin-left: 4px; }
 .so-mo { display: none; font-size: 11px; color: var(--gray-600); margin: 3px 0 0 19px; }
 @media (max-width: 700px) { .so-hm { display: none; } .so-mo { display: block; } .so-tabla { min-width: 0; } .so-tabla td, .so-tabla th { padding: 8px 6px; } .so-ac { width: 44px; } .so-ac .dt-btn { display: block; margin: 0 0 6px; } .so-f { font-size: 12px; } }
+.so-x { margin-left:auto; border:none; background:transparent; color:var(--gray-400,#9CA3AF); font-size:20px; line-height:1; cursor:pointer; padding:0 6px; border-radius:6px; }
+.so-x:hover { color:#DC2626; background:#FEE2E2; }
 .so-fr { padding: 8px 0; border-top: 1px solid var(--gray-200); display: flex; flex-direction: column; gap: 3px; }
 .so-fr-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .so-total { font-size: 12px; color: var(--gray-400); margin-top: 10px; }
@@ -798,6 +803,7 @@ a.so-link:hover { text-decoration: underline; }
 .tk-rep { display:inline-block; font-size:10.5px; font-weight:700; color:#B45309; background:#FEF3C7; border-radius:5px; padding:1px 5px; margin-right:6px; vertical-align:1px; }
 .tk-rep.alto { color:#B91C1C; background:#FEE2E2; }
 .ph-name .tk-num.grande { margin-left:8px; vertical-align:2px; }
+.guia h2 { font-size:15px; margin:14px 0 4px; } .guia ul { margin:0; padding-left:20px; font-size:14px; line-height:1.55; }
 .plan-cab { display:flex; gap:12px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
 .plan-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; margin-top:14px; align-items:start; }
 .plan-col, .plan-sin, .plan-des { background:var(--white,#fff); border:1px solid var(--gray-200,#E5E7EB); border-radius:14px; padding:14px; }
@@ -2550,7 +2556,7 @@ function embDeProyecto(modId) { return embList().filter(p => p.moduleId === modI
 function modEmbudoProyHtml(m) {
   const ps = embDeProyecto(m.id), id = embAttr(m.id);
   const libres = embList().filter(p => !p.moduleId);
-  const pron = (list) => { let act = 0, pipe = 0; list.forEach(p => { const v = Number(p.mensualidad) || 0; if (p.etapa === 'activo') act += v; else if (p.etapa !== 'perdido') pipe += Math.round(v * embProb(p.etapa) / 100); }); return { act, pipe, total: act + pipe }; };
+  const pron = (list) => { let act = 0, pipe = 0; list.forEach(p => { const v = Number(p.mensualidad) || 0; if (p.etapa === 'activo') act += v; else if (p.etapa !== 'perdido') pipe += Math.round(v * embProb(p.etapa, p.moduleId) / 100); }); return { act, pipe, total: act + pipe }; };
   const r = pron(ps), propias = !!embEtapasDe(m.id), cols = embColumnasProyecto(m.id);
   const colDe = p => propias ? ((embEtapaPDe(p) || {}).id) : p.etapa;
   const col = c => {
@@ -4405,12 +4411,16 @@ function segGuardarUmbral() {
 
 // ── 3. Pronóstico de ingresos ──
 const EMB_PROB_DEF = { diseno: 10, prospecto: 10, contactado: 20, reunion: 35, propuesta: 55, negociacion: 75, arranque: 90, activo: 100, perdido: 0 };
-function embProb(id) { const v = state.embProb && state.embProb[id]; return (v === 0 || v > 0) ? Number(v) : EMB_PROB_DEF[id]; }
+function embProb(id, modId) {
+  const o = modId && state.embProbProy && state.embProbProy[modId]; const w = o && o[id];
+  if (w === 0 || w > 0) return Number(w);
+  const v = state.embProb && state.embProb[id]; return (v === 0 || v > 0) ? Number(v) : EMB_PROB_DEF[id];
+}
 function embPronostico() {
   const filas = EMB_STAGES.map(s => {
     const ps = embList().filter(p => p.etapa === s.id);
     const monto = ps.reduce((t, p) => t + (Number(p.mensualidad) || 0), 0), prob = embProb(s.id);
-    return { s, n: ps.length, monto, prob, esp: Math.round(monto * prob / 100) };
+    return { s, n: ps.length, monto, prob, esp: ps.reduce((t, p) => t + Math.round((Number(p.mensualidad) || 0) * embProb(s.id, p.moduleId) / 100), 0) };
   });
   const activo = filas.find(f => f.s.id === 'activo').monto;
   const pipe = filas.filter(f => f.s.id !== 'activo' && f.s.id !== 'perdido').reduce((t, f) => t + f.esp, 0);
@@ -4433,7 +4443,7 @@ function dashPronostico() {
     </div>
     ${(() => { const g = embPorProyecto(); return g.length ? `<div class="dash-sub" style="margin-top:16px">Por proyecto</div>
       <div class="pron-tabla"><div class="pron-h pp"><span>Proyecto</span><span>Prospectos</span><span>Ya cobras</span><span>Esperado</span></div>
-      ${g.map(x => `<div class="pron-f pp"><span>${escHtml(x.nombre)}</span><span>${x.n}</span><span>${fmtCOP(x.act)}</span><b>${fmtCOP(x.total)}</b></div>`).join('')}
+      ${g.map(x => `<div class="pron-f pp"><span>${escHtml(x.nombre)}${x.id ? ` <button type="button" class="pron-aj${state.embProbProy && state.embProbProy[x.id] && Object.keys(state.embProbProy[x.id]).length ? ' on' : ''}" title="Probabilidades propias de este proyecto" onclick="pronProy('${embAttr(x.id)}')">%</button>` : ''}</span><span>${x.n}</span><span>${fmtCOP(x.act)}</span><b>${fmtCOP(x.total)}</b></div>`).join('')}
       <div class="pron-f pp" style="font-weight:700"><span>Total del negocio</span><span>${g.reduce((t, x) => t + x.n, 0)}</span><span>${fmtCOP(g.reduce((t, x) => t + x.act, 0))}</span><b>${fmtCOP(g.reduce((t, x) => t + x.total, 0))}</b></div></div>` : ''; })()}
     <div class="seg-cfg" style="margin-top:14px">Meta de ingreso mensual (COP) <input type="text" id="pron-meta" value="${meta ? meta.toLocaleString('es-CO') : ''}" oninput="formatCOPInput(this)" placeholder="Ej: 20.000.000" style="width:160px"> <button type="button" class="btn-add" onclick="pronMeta()">Guardar</button></div>
     ${meta ? `<div class="pron-barra"><div style="width:${Math.min(pct, 100)}%"></div></div><div class="bk-p">${pct}% de la meta mensual con lo esperado (${fmtCOP(r.total)} de ${fmtCOP(meta)}). ${r.total >= meta ? 'Vas por encima de la meta.' : 'Faltan ' + fmtCOP(meta - r.total) + '.'}</div>` : ''}
@@ -4443,6 +4453,23 @@ function pronProb(id, v) {
   let n = parseInt(v, 10); if (!(n >= 0)) n = 0; if (n > 100) n = 100;
   if (!state.embProb) state.embProb = {};
   state.embProb[id] = n; saveLocal(); refrescarDash(); dashPronostico();
+}
+function pronProy(modId) {
+  const m = state.modules.find(x => x.id === modId); if (!m) return;
+  const o = (state.embProbProy || {})[modId] || {};
+  const filas = EMB_STAGES.filter(st => st.id !== 'activo' && st.id !== 'perdido').map(st => `<div class="pron-f pj"><span><i class="pron-dot" style="background:${st.color}"></i>${escHtml(st.name)}</span><span class="so-mut">general ${embProb(st.id)}%</span>
+    <span><input type="number" min="0" max="100" id="pj-${st.id}" value="${o[st.id] === 0 || o[st.id] > 0 ? o[st.id] : ''}" placeholder="${embProb(st.id)}">%</span></div>`).join('');
+  setModal(`<h3>Probabilidades de ${escHtml(m.name)}</h3>
+    <p class="bk-p">Cada proyecto cierra distinto. Escribe un porcentaje solo donde quieras cambiar el general; si lo dejas vacío, usa el general.</p>
+    <div class="pron-tabla">${filas}</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="dashPronostico()">Volver</button><button class="btn-confirm" onclick="pronProyGuardar('${embAttr(modId)}')">Guardar</button></div>`, 560);
+}
+function pronProyGuardar(modId) {
+  const o = {};
+  EMB_STAGES.forEach(st => { const e = document.getElementById('pj-' + st.id); if (!e || e.value.trim() === '') return; let n = parseInt(e.value, 10); if (!(n >= 0)) return; o[st.id] = Math.min(n, 100); });
+  if (!state.embProbProy) state.embProbProy = {};
+  if (Object.keys(o).length) state.embProbProy[modId] = o; else delete state.embProbProy[modId];
+  saveLocal(); refrescarDash(); showToast('💾 Probabilidades guardadas'); dashPronostico();
 }
 function pronMeta() { state.embMetaMensual = parseCOP(document.getElementById('pron-meta').value) || 0; saveLocal(); refrescarDash(); dashPronostico(); }
 
@@ -4689,7 +4716,7 @@ function embPorProyecto() {
   if (libres.length) grupos.push({ id: '', nombre: 'Sin proyecto', ps: libres });
   return grupos.map(g => {
     let act = 0, pipe = 0, clientes = 0, enCurso = 0;
-    g.ps.forEach(p => { const v = Number(p.mensualidad) || 0; if (p.etapa === 'activo') { act += v; clientes++; } else if (p.etapa !== 'perdido') { pipe += Math.round(v * embProb(p.etapa) / 100); enCurso++; } });
+    g.ps.forEach(p => { const v = Number(p.mensualidad) || 0; if (p.etapa === 'activo') { act += v; clientes++; } else if (p.etapa !== 'perdido') { pipe += Math.round(v * embProb(p.etapa, g.id) / 100); enCurso++; } });
     return { id: g.id, nombre: g.nombre, n: g.ps.length, clientes, enCurso, act, pipe, total: act + pipe };
   });
 }
@@ -5068,7 +5095,7 @@ function tkSoporte(ctx, n) {
 function soSeccionFicha(p) {
   const l = soList().filter(s => s.pid === p.id).sort((a, b) => b.n - a.n);
   return l.length ? l.map(s => `<div class="so-fr">
-      <div class="so-fr-top"><span class="so-cod">${soCodigo(s)}</span><span class="emb-act-date">${formatDate(s.fecha)} · ${escHtml(s.tipo)}</span></div>
+      <div class="so-fr-top"><span class="so-cod">${soCodigo(s)}</span><span class="emb-act-date">${formatDate(s.fecha)} · ${escHtml(s.tipo)}</span><button type="button" class="so-x" title="Eliminar este soporte" onclick="soEliminarFicha('${embAttr(s.id)}','${embAttr(p.id)}')">×</button></div>
       ${soEnlace(s, 'emb-link')}
     </div>`).join('') : '<div class="emb-none">Aún no hay soportes. Cada novedad o tarea tiene su clip para dejar uno.</div>';
 }
@@ -5159,6 +5186,13 @@ function soGuardarModal() {
     showToast('📎 Soporte ' + soCodigo(s) + ' guardado');
   }
   saveLocal(); closeModal(); soRefrescarVista();
+}
+function soEliminarFicha(id, pid) {
+  const s = soList().find(x => x.id === id); if (!s) return;
+  if (!confirm('¿Eliminar el soporte ' + soCodigo(s) + ' "' + s.titulo + '"?\nSe quita solo del registro; el documento en Drive no se toca. Su número no se reutiliza.')) return;
+  state.soportes = soList().filter(x => x.id !== id); saveLocal(); showToast('🗑 Soporte eliminado');
+  const p = embList().find(x => x.id === pid), sp = document.getElementById('emb-sops'); if (p && sp) sp.innerHTML = soSeccionFicha(p);
+  soRefrescarVista();
 }
 function soEliminar(id) {
   const s = soList().find(x => x.id === id); if (!s) return;
@@ -5260,7 +5294,7 @@ function impProyectoHtml(modId) {
     }), '');
   }
   h += `<h2>Soportes (${sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(sops), 'Este proyecto aún no tiene soportes.');
-  return impDoc('Informe del proyecto: ' + m.name, '', h);
+  return impDoc('Informe del proyecto: ' + m.name, m.cod ? 'Proyecto ' + m.cod : '', h);
 }
 function impProyecto(modId) { const h = impProyectoHtml(modId); if (!h) { showToast('Elige un proyecto'); return; } impLanzar(h); }
 
@@ -5367,6 +5401,17 @@ function planGrupos() {
     hoyF: hoy, finSem
   };
 }
+function guiaHtml() {
+  const li = a => '<ul>' + a.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+  return `<h2>Cada día (10 minutos)</h2>${li(['Abre <b>Plan</b>: lo de <b>Hoy</b> es lo único que importa. Si hay vencidas, resuélvelas primero.', 'Cada tarea se <b>cumple ✓</b>, se <b>reprograma 📅</b> (queda la cuenta ↻) o se <b>elimina 🗑</b>. Nada se queda sin resolver.', 'Cada contacto o novedad con un cliente se anota en la ficha del <b>Embudo</b>.', 'Todo documento que respalde algo (propuesta, contrato, foto, recibo) se sube a Drive y se registra con su <b>clip 📎</b>.', 'Al cerrar: <b>Plan → Parte del día</b>, escribe tus observaciones y guarda o imprime.'])}
+  <h2>Cada semana (30 minutos, lunes o viernes)</h2>${li(['Mira la columna <b>Esta semana</b> y la de <b>Este mes</b>: ¿hay algo sin fecha? Ponle fecha, o no existe.', 'Revisa las tareas con <b>↻3</b> o más: hazlas ya, divídelas o elimínalas.', 'Repasa el <b>Embudo</b>: mueve de etapa a quien avanzó y anota el siguiente paso con fecha.', 'Entrega el <b>Parte semanal</b> con tus observaciones.'])}
+  <h2>Cada mes (1 hora, fin de mes)</h2>${li(['Revisa el <b>Dashboard</b>: progreso por proyecto, ingresos y pronóstico contra la meta.', 'Ajusta las <b>probabilidades</b> (por proyecto con el botón %) según lo que de verdad cerró.', 'Descarga el registro de <b>Soportes</b> y haz un <b>Backup</b>.', 'Entrega el <b>Parte mensual</b>.'])}
+  <h2>Reglas de oro</h2>${li(['Si está escrito, tiene <b>fecha</b>. Sin fecha no entra al Plan.', 'Una carpeta de Drive por proyecto; los soportes salen de ahí.', 'Antes de cerrar sesión o cambiar de equipo, pulsa <b>Subir</b> ☁️.'])}`;
+}
+function guiaRutina() {
+  setModal(`<h3>Guía de rutina</h3><div class="guia">${guiaHtml()}</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cerrar</button><button class="btn-confirm" onclick="impLanzar(impDoc('Guía de rutina de trabajo','Día · Semana · Mes',guiaHtml()))">🖨 Imprimir o guardar PDF</button></div>`, 640);
+}
 function renderPlan() {
   const G = planGrupos(), hoyD = hoyLocal();
   const venc = G.hoy.filter(t => t.date < G.hoyF).length, rep3 = [].concat(G.hoy, G.semana, G.mes).filter(t => (t.reprog || 0) >= 3).length;
@@ -5381,7 +5426,7 @@ function renderPlan() {
     <div><div class="card-title" style="margin:0">Plan</div>
     <div class="so-sub">Lo escrito se hace. Las tareas se acomodan solas por su fecha límite: Hoy, esta semana o este mes.</div></div>
     <div class="so-btns"><button type="button" class="btn-add" onclick="parteAbrir('d')">Parte del día</button>
-      <button type="button" class="edit-btn" onclick="parteAbrir('s')">Parte semanal</button><button type="button" class="edit-btn" onclick="parteAbrir('m')">Parte mensual</button></div>
+      <button type="button" class="edit-btn" onclick="parteAbrir('s')">Parte semanal</button><button type="button" class="edit-btn" onclick="parteAbrir('m')">Parte mensual</button><button type="button" class="edit-btn" onclick="guiaRutina()">📖 Guía de rutina</button></div>
   </div>
   ${venc ? `<div class="plan-alerta">⚠️ ${venc} ${venc === 1 ? 'tarea vencida' : 'tareas vencidas'}: cúmplela, reprográmala o elimínala. Nada debe quedar sin resolver al cerrar el día.</div>` : ''}
   ${rep3 ? `<div class="plan-alerta amb">↻ ${rep3} ${rep3 === 1 ? 'tarea lleva' : 'tareas llevan'} 3 o más reprogramaciones: hazla ya, divídela o elimínala.</div>` : ''}
