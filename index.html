@@ -975,7 +975,7 @@ a.so-link:hover { text-decoration: underline; }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 26-oct · 19:10 · listados</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 26-oct · 20:10 · actualizar desde archivo</div>
     </div>
   </nav>
 
@@ -4041,6 +4041,12 @@ function renderBackup() {
         <input type="file" accept=".json" style="display:none" onchange="importBackup(event)">
       </label>
     </div>
+    <div class="bk-act">
+      <label class="edit-btn" style="cursor:pointer;display:inline-block">🔄 Actualizar este negocio desde un archivo
+        <input type="file" accept=".json" style="display:none" onchange="actualizarDesdeArchivo(event)">
+      </label>
+      <p class="bk-p" style="margin-top:6px">Reemplaza los datos de <b>este</b> negocio por los de un backup de otro (por ejemplo, el de tu Atocha personal), sin crear negocios nuevos ni duplicados. Conserva el nombre y la cuenta de este negocio. Antes guarda una copia.</p>
+    </div>
     <div style="margin-top:16px;font-size:12px;color:var(--gray-400);">Última exportación: guarda regularmente para no perder datos.</div>
   </div>` + backupExtraHtml();
 }
@@ -4056,6 +4062,23 @@ function exportBackup() {
   a.download = `atocha_${safeName}_${date}_${time}.json`;
   a.click();
   showToast('📦 Backup exportado');
+}
+function actualizarDesdeArchivo(e) {
+  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    let d;
+    try { d = JSON.parse(ev.target.result); } catch (x) { showToast('❌ Archivo inválido'); return; }
+    if (!d || !Array.isArray(d.modules)) { showToast('❌ Ese archivo no es un backup de Atocha'); return; }
+    if (!confirm('Se reemplazarán TODOS los datos de "' + (state.company || 'este negocio') + '" por los del archivo ("' + (d.company || 'sin nombre') + '").\nSe conservan el nombre y la cuenta de este negocio, y no se crea ningún negocio nuevo.\nAntes se guarda una copia por si quieres volver atrás. ¿Continuar?')) return;
+    snapGuardar('Antes de actualizar desde archivo', true);
+    const keep = { clientId: state.clientId, company: state.company, tagline: state.tagline, sync: state.sync };
+    const nuevo = Object.assign({}, d);
+    Object.keys(keep).forEach(k => { if (keep[k] === undefined) delete nuevo[k]; else nuevo[k] = keep[k]; });
+    state = nuevo; ensureDefaults(); saveLocal(); renderSidebar(); goPage('dashboard');
+    showToast('✅ Negocio actualizado desde el archivo. Pulsa Subir para guardarlo en la nube.');
+  };
+  r.readAsText(file);
 }
 function importBackup(e) {
   const file = e.target.files[0];
