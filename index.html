@@ -801,6 +801,17 @@ a.so-link:hover { text-decoration: underline; }
 .ls-tabla td, .ls-tabla th { white-space:nowrap; } .ls-tabla .n { text-align:right; } .ls-nom { max-width:340px; overflow:hidden; text-overflow:ellipsis; } .ls-pn { display:inline-block; max-width:180px; overflow:hidden; text-overflow:ellipsis; vertical-align:bottom; }
 .ls-num, .ls-pl { cursor:pointer; border:none; } .ls-pl:hover { background:#DBEAFE; }
 .ls-est { font-size:11.5px; font-weight:700; border-radius:99px; padding:2px 9px; background:#E5E7EB; color:#374151; } .ls-est.cumplida { background:#DCFCE7; color:#166534; } .ls-est.vencida { background:#FEE2E2; color:#991B1B; } .ls-est.pendiente { background:#FEF3C7; color:#92400E; }
+.tk-nota { border:none; background:#FEF9C3; color:#854D0E; border-radius:5px; font-size:11px; line-height:1; padding:2px 5px; margin-right:6px; vertical-align:1px; cursor:pointer; } button.tk-nota:hover { background:#FDE68A; }
+.th-lab { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.th-tools { display:inline-flex; gap:6px; } .th-mini { border:1px solid var(--gray-200,#E5E7EB); background:var(--white,#fff); color:var(--blue-700,#1D4ED8); border-radius:7px; font-size:12px; font-weight:600; padding:3px 9px; cursor:pointer; font-family:inherit; }
+.th-mini:hover { background:var(--blue-50,#EFF6FF); } .th-acc { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+#th-notas { resize:vertical; min-height:110px; }
+.th-full { position:fixed; inset:0; z-index:100000; background:var(--white,#fff); display:flex; flex-direction:column; height:100vh; height:100dvh; }
+.thf-top { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--gray-200,#E5E7EB); }
+.thf-t { font-weight:700; font-size:15px; min-width:0; overflow-wrap:anywhere; } .thf-b { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.th-full textarea { flex:1; width:100%; border:none; outline:none; resize:none; padding:18px max(16px, calc((100% - 860px) / 2)); font-size:16px; line-height:1.6; font-family:inherit; background:var(--white,#fff); color:var(--gray-900,#111827); }
+.thf-pie { padding:6px 16px; font-size:12px; color:var(--gray-400,#9CA3AF); border-top:1px solid var(--gray-200,#E5E7EB); }
+.dark .th-full, .dark .th-full textarea { background:#111827; color:#F3F4F6; }
 .build-tag { font-size:10.5px; color:rgba(255,255,255,.35); padding:10px 16px 14px; }
 .mcod { display:inline-block; font-family: ui-monospace, Consolas, monospace; font-size:10px; font-weight:700; letter-spacing:.2px; color:var(--blue-700,#1D4ED8); background:var(--blue-50,#EFF6FF); border-radius:5px; padding:1px 5px; margin-right:6px; vertical-align:1px; white-space:nowrap; }
 .sidebar .mcod { background:rgba(255,255,255,.12); color:#E5E7EB; }
@@ -975,7 +986,7 @@ a.so-link:hover { text-decoration: underline; }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 26-oct · 20:10 · actualizar desde archivo</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 28-oct · 19:30 · notas a pantalla completa</div>
     </div>
   </nav>
 
@@ -1165,7 +1176,7 @@ function lsTabla() {
   const l = lsFiltrar(lsTareas(), true);
   if (!l.length) return '<div class="emb-none" style="padding:18px 4px">Ninguna tarea coincide.</div>';
   return `<div class="so-scroll"><table class="so-tabla ls-tabla"><thead><tr><th>N° tarea</th><th>Proyecto</th><th>Tarea</th><th>Creación</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>${l.map(r => `<tr>
-    <td>${r.num ? `<button type="button" class="tk-num ls-num" onclick="tkHoja('${embAttr(r.id)}')" title="Abrir la tarea">${escHtml(r.num)}</button>` : '—'}</td>
+    <td>${r.num ? `<button type="button" class="tk-num ls-num" onclick="tkHoja('${embAttr(r.id)}')" title="Abrir la tarea">${escHtml(r.num)}</button>${r.x.o.notas ? `<button type="button" class="tk-nota" onclick="tkHoja('${embAttr(r.id)}')" title="Tiene una nota guardada: ábrela">📝</button>` : ''}` : '—'}</td>
     <td>${r.m && r.m.cod ? `<button type="button" class="mcod ls-pl" onclick="goPage('mod_${embAttr(r.m.id)}')" title="${embAttr(r.proyTxt)}">${escHtml(r.m.cod)}</button>` : ''}<span class="ls-pn">${escHtml(r.m ? r.m.name : r.proyTxt)}</span></td>
     <td class="ls-nom" title="${embAttr(r.nombre)}">${escHtml(r.nombre)}</td><td>${lsFecha(r.creada)}</td>
     <td${r.est === 'vencida' ? ' style="color:var(--red);font-weight:700"' : ''}>${lsFecha(r.fecha)}</td><td><span class="ls-est ${r.est}">${LS_EST_T[r.est]}</span></td></tr>`).join('')}</tbody></table></div><div class="so-total">${l.length} de ${lsTareas().length} tareas</div>`;
@@ -1652,7 +1663,7 @@ function getAllTasks() {
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
   embList().forEach(p => (p.actividades || []).forEach(a => all.push({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0,
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   })));
   return all;
@@ -2060,7 +2071,7 @@ function isoALocal(iso) {
 function tkDeEmb(p) {
   return (p.actividades || []).map(a => ({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0,
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   }));
 }
@@ -5594,8 +5605,9 @@ function renderPlan() {
 }
 
 function tkNumChip(t, sinClic) {
+  const nb = t && t.notas ? (sinClic ? '<span class="tk-nota" title="Esta tarea tiene una nota guardada">📝</span>' : `<button type="button" class="tk-nota" onclick="event.stopPropagation();tkHoja('${embAttr(t.id)}')" title="Tiene una nota guardada: ábrela">📝</button>`) : '';
   const rb = t && t.reprog ? `<span class="tk-rep${t.reprog >= 3 ? ' alto' : ''}" title="Reprogramada ${t.reprog} ${t.reprog === 1 ? 'vez' : 'veces'}">↻${t.reprog}</span>` : '';
-  return tkNumChip0(t, sinClic) + rb;
+  return tkNumChip0(t, sinClic) + rb + nb;
 }
 function tkNumChip0(t, sinClic) {
   if (t && t.num && sinClic) return `<span class="tk-num" title="Número de la tarea">${escHtml(t.num)}</span>`;   // dentro de la ficha no se abre otra ventana: se perdería lo que estés escribiendo
@@ -5623,8 +5635,12 @@ function tkHoja(id) {
       ${o.reprog ? fila('Reprogramada', `<span${o.reprog >= 3 ? ' style="color:var(--red);font-weight:700"' : ''}>${o.reprog} ${o.reprog === 1 ? 'vez' : 'veces'}</span>${o.fechaOrig ? ' · fecha original ' + formatDate(o.fechaOrig) : ''}`) : ''}
       ${o.repite && REPITE[o.repite] ? fila('Se repite', escHtml(REPITE[o.repite])) : ''}
     </div>
-    <div class="modal-field"><label>Avance o notas de esta tarea</label>
-      <textarea id="th-notas" rows="4" placeholder="Qué se hizo, con quién se habló, qué falta…" maxlength="4000">${escHtml(o.notas || '')}</textarea></div>
+    <div class="modal-field"><label class="th-lab">Avance o notas de esta tarea
+        <span class="th-tools"><button type="button" class="th-mini" onclick="thFecha('th-notas')">+ Fecha</button><button type="button" class="th-mini" onclick="thPantalla('${embAttr(o.id)}')">⛶ Pantalla completa</button></span></label>
+      <textarea id="th-notas" rows="5" placeholder="Qué se hizo, con quién se habló, qué falta…" maxlength="20000">${escHtml(o.notas || '')}</textarea>
+      <div class="th-acc"><button type="button" class="edit-btn" onclick="thGuardarYa('${embAttr(o.id)}')">💾 Guardar nota</button>
+        <button type="button" class="edit-btn" onclick="thGoogle('${embAttr(o.id)}')">📄 Pasar a Google Docs</button></div>
+      <div class="so-ayuda">La nota se guarda sola al cerrar. Con "Subir" también queda en tu nube. "Pasar a Google Docs" copia el texto y abre un documento nuevo: pégalo y luego registra su enlace como soporte.</div></div>
     <div class="th-sec"><div class="th-sec-t">Soportes (${sops.length})</div>
       ${sops.length ? soTabla(sops, { sinDonde: true }) : '<div class="emb-none">Esta tarea aún no tiene soportes.</div>'}
       <div class="dt-panel so-panel" id="so-th"></div>
@@ -5643,8 +5659,49 @@ function tkHoja(id) {
 }
 function thGuardarNotas(id) {
   const x = tkBuscarPorId(id), t = document.getElementById('th-notas'); if (!x || !t) return;
-  const v = t.value.trim().slice(0, 4000);
+  const v = t.value.trim().slice(0, 20000);
   if ((x.o.notas || '') !== v) { if (v) x.o.notas = v; else delete x.o.notas; saveLocal(); }
+}
+// ── Nota de la tarea: fecha rápida, pantalla completa y paso a Google Docs ──
+function thFecha(areaId) {
+  const t = document.getElementById(areaId); if (!t) return;
+  const f = fechaLocal(embToday()).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+  t.value = t.value + (t.value && !/\n$/.test(t.value) ? '\n\n' : '') + '[' + f + '] ';
+  t.focus(); t.setSelectionRange(t.value.length, t.value.length); t.scrollTop = t.scrollHeight;
+  t.dispatchEvent(new Event('input'));
+}
+function thGuardarYa(id) { thGuardarNotas(id); showToast('💾 Nota guardada'); }
+function thPantalla(id) {
+  const x = tkBuscarPorId(id), src = document.getElementById('th-notas'); if (!x || !src || document.getElementById('th-full')) return;
+  const d = document.createElement('div'); d.id = 'th-full'; d.className = 'th-full';
+  d.innerHTML = `<div class="thf-top"><div class="thf-t"><span class="tk-num">${escHtml(x.o.num || '')}</span> ${escHtml(tkX.nombre(x))}</div>
+    <div class="thf-b"><button type="button" class="th-mini" onclick="thFecha('thf-area')">+ Fecha</button>
+      <button type="button" class="th-mini" onclick="thGuardarFull('${embAttr(id)}')">💾 Guardar</button>
+      <button type="button" class="th-mini" onclick="thGoogle('${embAttr(id)}')">📄 Google Docs</button>
+      <button type="button" class="btn-confirm" onclick="thCerrarFull('${embAttr(id)}')">Cerrar</button></div></div>
+    <textarea id="thf-area" maxlength="20000" placeholder="Escribe aquí todas las novedades de esta tarea…"></textarea>
+    <div class="thf-pie" id="thf-cuenta"></div>`;
+  document.body.appendChild(d);
+  const a = document.getElementById('thf-area'), c = document.getElementById('thf-cuenta');
+  a.value = src.value;
+  const cuenta = () => { c.textContent = a.value.length.toLocaleString('es-CO') + ' de 20.000 caracteres · Esc para cerrar'; };
+  a.addEventListener('input', cuenta);
+  d.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); thCerrarFull(id); } });
+  cuenta(); a.focus(); a.setSelectionRange(a.value.length, a.value.length); a.scrollTop = a.scrollHeight;
+}
+function thSincFull() { const a = document.getElementById('thf-area'), s2 = document.getElementById('th-notas'); if (a && s2) s2.value = a.value; }
+function thGuardarFull(id) { thSincFull(); thGuardarNotas(id); showToast('💾 Nota guardada'); }
+function thCerrarFull(id) { thSincFull(); const d = document.getElementById('th-full'); if (d) d.remove(); thGuardarNotas(id); }
+function thGoogle(id) {
+  thSincFull(); thGuardarNotas(id);
+  const x = tkBuscarPorId(id); if (!x) return;
+  const o = x.o, f = tkX.fecha(x), t = document.getElementById('th-notas');
+  const txt = (o.num || '') + ' · ' + tkX.nombre(x) + '\nProyecto: ' + x.proy + (f ? '\nFecha límite: ' + formatDate(f) : '') + '\n\n' + (t ? t.value : (o.notas || ''));
+  let copiado = false;
+  try { const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); copiado = document.execCommand('copy'); ta.remove(); } catch (e) { copiado = false; }
+  if (!copiado && navigator.clipboard && navigator.clipboard.writeText) { try { navigator.clipboard.writeText(txt); copiado = true; } catch (e) { /* sin portapapeles */ } }
+  window.open('https://docs.new', '_blank', 'noopener');
+  showToast(copiado ? '📋 Texto copiado. Pégalo en el documento nuevo (Ctrl+V)' : '⚠️ No pude copiar: selecciona la nota y cópiala a mano');
 }
 function thRefrescarVista() { const p = currentPage; if (p) goPage(p); }
 function thCerrar(id) { thGuardarNotas(id); closeModal(); thRefrescarVista(); }
