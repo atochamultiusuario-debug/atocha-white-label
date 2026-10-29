@@ -810,6 +810,10 @@ a.so-link:hover { text-decoration: underline; }
 .ls-num, .ls-pl { cursor:pointer; border:none; } .ls-pl:hover { background:#DBEAFE; }
 .ls-est { font-size:11.5px; font-weight:700; border-radius:99px; padding:2px 9px; background:#E5E7EB; color:#374151; } .ls-est.cumplida { background:#DCFCE7; color:#166534; } .ls-est.vencida { background:#FEE2E2; color:#991B1B; } .ls-est.pendiente { background:#FEF3C7; color:#92400E; }
 .tk-nota { border:none; background:#FEF9C3; color:#854D0E; border-radius:5px; font-size:11px; line-height:1; padding:2px 5px; margin-right:6px; vertical-align:1px; cursor:pointer; } button.tk-nota:hover { background:#FDE68A; }
+.th-ntabs { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:2px 0 8px; }
+.th-ntab { border:1.5px solid var(--gray-200,#E5E7EB); background:var(--white,#fff); color:var(--gray-700,#374151); border-radius:8px; font-size:12.5px; font-weight:600; padding:4px 11px; cursor:pointer; font-family:inherit; }
+.th-ntab.on { background:var(--blue-600,#2563EB); border-color:var(--blue-600,#2563EB); color:#fff; } .th-ntab.nueva { border-style:dashed; color:var(--blue-700,#1D4ED8); } .th-ncount { font-size:11.5px; color:var(--gray-400,#9CA3AF); margin-left:auto; }
+.th-quitar { color:#B91C1C; }
 .th-lab { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
 .th-tools { display:inline-flex; gap:6px; } .th-mini { border:1px solid var(--gray-200,#E5E7EB); background:var(--white,#fff); color:var(--blue-700,#1D4ED8); border-radius:7px; font-size:12px; font-weight:600; padding:3px 9px; cursor:pointer; font-family:inherit; }
 .th-mini:hover { background:var(--blue-50,#EFF6FF); } .th-acc { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
@@ -995,7 +999,7 @@ a.so-link:hover { text-decoration: underline; }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 29-oct · 17:00 · contactos por proyecto</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 29-oct · 18:00 · hasta 5 notas por tarea</div>
     </div>
   </nav>
 
@@ -1812,7 +1816,7 @@ function getAllTasks() {
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
   embList().forEach(p => (p.actividades || []).forEach(a => all.push({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '',
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [],
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   })));
   return all;
@@ -2220,7 +2224,7 @@ function isoALocal(iso) {
 function tkDeEmb(p) {
   return (p.actividades || []).map(a => ({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '',
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [],
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   }));
 }
@@ -5755,7 +5759,8 @@ function renderPlan() {
 }
 
 function tkNumChip(t, sinClic) {
-  const nb = t && t.notas ? (sinClic ? '<span class="tk-nota" title="Esta tarea tiene una nota guardada">📝</span>' : `<button type="button" class="tk-nota" onclick="event.stopPropagation();tkHoja('${embAttr(t.id)}')" title="Tiene una nota guardada: ábrela">📝</button>`) : '';
+  const nn = t ? (t.notas ? 1 : 0) + (Array.isArray(t.notasMas) ? t.notasMas.length : 0) : 0, ntxt = nn > 1 ? nn : '';
+  const nb = nn ? (sinClic ? `<span class="tk-nota" title="Esta tarea tiene ${nn} ${nn === 1 ? 'nota guardada' : 'notas guardadas'}">📝${ntxt}</span>` : `<button type="button" class="tk-nota" onclick="event.stopPropagation();tkHoja('${embAttr(t.id)}')" title="Tiene ${nn} ${nn === 1 ? 'nota guardada' : 'notas guardadas'}: ábrela">📝${ntxt}</button>`) : '';
   const rb = t && t.reprog ? `<span class="tk-rep${t.reprog >= 3 ? ' alto' : ''}" title="Reprogramada ${t.reprog} ${t.reprog === 1 ? 'vez' : 'veces'}">↻${t.reprog}</span>` : '';
   return tkNumChip0(t, sinClic) + rb + nb;
 }
@@ -5771,6 +5776,7 @@ function tkHoja(id) {
   const o = x.o, hecha = tkX.hecha(x), fecha = tkX.fecha(x), hoy = embToday();
   const venc = !hecha && fecha && fecha < hoy;
   const sops = soDe(o.id).sort((a, b) => a.n - b.n);
+  thNotasIniciar(o);
   const fila = (k, v) => `<div class="th-k">${k}</div><div class="th-v">${v}</div>`;
   setModal(`<div class="th">
     <div class="th-top"><span class="tk-num grande">${escHtml(o.num || '')}</span>
@@ -5787,10 +5793,12 @@ function tkHoja(id) {
     </div>
     <div class="modal-field"><label class="th-lab">Avance o notas de esta tarea
         <span class="th-tools"><button type="button" class="th-mini" onclick="thFecha('th-notas')">+ Fecha</button><button type="button" class="th-mini" onclick="thPantalla('${embAttr(o.id)}')">⛶ Pantalla completa</button></span></label>
-      <textarea id="th-notas" rows="5" placeholder="Qué se hizo, con quién se habló, qué falta…" maxlength="20000">${escHtml(o.notas || '')}</textarea>
-      <div class="th-acc"><button type="button" class="edit-btn" onclick="thGuardarYa('${embAttr(o.id)}')">💾 Guardar nota</button>
-        <button type="button" class="edit-btn" onclick="thGoogle('${embAttr(o.id)}')">📄 Pasar a Google Docs</button></div>
-      <div class="so-ayuda">La nota se guarda sola al cerrar. Con "Subir" también queda en tu nube. "Pasar a Google Docs" copia el texto y abre un documento nuevo: pégalo y luego registra su enlace como soporte.</div></div>
+      <div class="th-ntabs" id="th-ntabs">${thTabsHtml()}</div>
+      <textarea id="th-notas" rows="5" placeholder="Qué se hizo, con quién se habló, qué falta…" maxlength="20000">${escHtml(_thN.arr[_thN.act] || '')}</textarea>
+      <div class="th-acc"><button type="button" class="edit-btn" onclick="thGuardarYa('${embAttr(o.id)}')">💾 Guardar notas</button>
+        <button type="button" class="edit-btn" onclick="thGoogle('${embAttr(o.id)}')">📄 Pasar a Google Docs</button>
+        <button type="button" class="edit-btn th-quitar" onclick="thNotaQuitar()">🗑 Eliminar esta nota</button></div>
+      <div class="so-ayuda">Puedes guardar hasta 5 notas por tarea. Se guardan solas al cerrar y con "Subir" también quedan en tu nube. "Pasar a Google Docs" copia todas las notas y abre un documento nuevo: pégalas y luego registra su enlace como soporte.</div></div>
     <div class="th-sec"><div class="th-sec-t">Soportes (${sops.length})</div>
       ${sops.length ? soTabla(sops, { sinDonde: true }) : '<div class="emb-none">Esta tarea aún no tiene soportes.</div>'}
       <div class="dt-panel so-panel" id="so-th"></div>
@@ -5807,10 +5815,38 @@ function tkHoja(id) {
       <button class="btn-confirm" onclick="thAlternar('${embAttr(o.id)}')">${hecha ? '↩ Reabrir' : '✓ Marcar como cumplida'}</button>
     </div></div>`, 600);
 }
+// Hasta 5 notas por tarea: la primera vive en o.notas y las demás en o.notasMas.
+let _thN = { id: '', arr: [''], act: 0, keep: false };
+function thNotasIniciar(o) {
+  const arr = [o.notas || ''].concat(Array.isArray(o.notasMas) ? o.notasMas : []).slice(0, 5);
+  _thN = { id: o.id, arr, act: _thN.id === o.id && _thN.keep ? Math.min(_thN.act, arr.length - 1) : 0, keep: false };
+}
+function thTabsHtml() {
+  const a = _thN.arr;
+  return a.map((t, i) => `<button type="button" class="th-ntab${i === _thN.act ? ' on' : ''}" onclick="thNotaTab(${i})">Nota ${i + 1}${String(t).trim() ? ' •' : ''}</button>`).join('') +
+    (a.length < 5 ? '<button type="button" class="th-ntab nueva" onclick="thNotaNueva()">+ Nota</button>' : '') + `<span class="th-ncount">${a.length} de 5</span>`;
+}
+function thNotasPintar() { const e = document.getElementById('th-ntabs'); if (e) e.innerHTML = thTabsHtml(); }
+function thNotaLeer() { const t = document.getElementById('th-notas'); if (t && _thN.arr[_thN.act] !== undefined) _thN.arr[_thN.act] = t.value; }
+function thNotaMostrar() { const t = document.getElementById('th-notas'); if (t) { t.value = _thN.arr[_thN.act] || ''; t.focus(); } thNotasPintar(); }
+function thNotaTab(i) { thNotaLeer(); if (i < 0 || i >= _thN.arr.length) return; _thN.act = i; thNotaMostrar(); }
+function thNotaNueva() {
+  thNotaLeer(); if (_thN.arr.length >= 5) { showToast('Máximo 5 notas por tarea'); return; }
+  _thN.arr.push(''); _thN.act = _thN.arr.length - 1; thNotaMostrar();
+}
+function thNotaQuitar() {
+  thNotaLeer();
+  if (String(_thN.arr[_thN.act]).trim() && !confirm('¿Eliminar la Nota ' + (_thN.act + 1) + '? No se puede deshacer.')) return;
+  _thN.arr.splice(_thN.act, 1); if (!_thN.arr.length) _thN.arr = ['']; _thN.act = Math.min(_thN.act, _thN.arr.length - 1); thNotaMostrar();
+}
 function thGuardarNotas(id) {
-  const x = tkBuscarPorId(id), t = document.getElementById('th-notas'); if (!x || !t) return;
-  const v = t.value.trim().slice(0, 20000);
-  if ((x.o.notas || '') !== v) { if (v) x.o.notas = v; else delete x.o.notas; saveLocal(); }
+  const x = tkBuscarPorId(id), t = document.getElementById('th-notas'); if (!x || !t || _thN.id !== id) return;
+  thNotaLeer();
+  const textos = _thN.arr.map(v => String(v).trim().slice(0, 20000)).filter(Boolean);
+  const antes = JSON.stringify([x.o.notas || '', x.o.notasMas || []]);
+  if (textos[0]) x.o.notas = textos[0]; else delete x.o.notas;
+  if (textos.length > 1) x.o.notasMas = textos.slice(1); else delete x.o.notasMas;
+  if (antes !== JSON.stringify([x.o.notas || '', x.o.notasMas || []])) saveLocal();
 }
 // ── Nota de la tarea: fecha rápida, pantalla completa y paso a Google Docs ──
 function thFecha(areaId) {
@@ -5824,7 +5860,7 @@ function thGuardarYa(id) { thGuardarNotas(id); showToast('💾 Nota guardada'); 
 function thPantalla(id) {
   const x = tkBuscarPorId(id), src = document.getElementById('th-notas'); if (!x || !src || document.getElementById('th-full')) return;
   const d = document.createElement('div'); d.id = 'th-full'; d.className = 'th-full';
-  d.innerHTML = `<div class="thf-top"><div class="thf-t"><span class="tk-num">${escHtml(x.o.num || '')}</span> ${escHtml(tkX.nombre(x))}</div>
+  d.innerHTML = `<div class="thf-top"><div class="thf-t"><span class="tk-num">${escHtml(x.o.num || '')}</span> ${escHtml(tkX.nombre(x))} <span class="so-mut">· Nota ${_thN.act + 1}</span></div>
     <div class="thf-b"><button type="button" class="th-mini" onclick="thFecha('thf-area')">+ Fecha</button>
       <button type="button" class="th-mini" onclick="thGuardarFull('${embAttr(id)}')">💾 Guardar</button>
       <button type="button" class="th-mini" onclick="thGoogle('${embAttr(id)}')">📄 Google Docs</button>
@@ -5845,8 +5881,10 @@ function thCerrarFull(id) { thSincFull(); const d = document.getElementById('th-
 function thGoogle(id) {
   thSincFull(); thGuardarNotas(id);
   const x = tkBuscarPorId(id); if (!x) return;
-  const o = x.o, f = tkX.fecha(x), t = document.getElementById('th-notas');
-  const txt = (o.num || '') + ' · ' + tkX.nombre(x) + '\nProyecto: ' + x.proy + (f ? '\nFecha límite: ' + formatDate(f) : '') + '\n\n' + (t ? t.value : (o.notas || ''));
+  const o = x.o, f = tkX.fecha(x);
+  const ns = [o.notas || ''].concat(o.notasMas || []).filter(Boolean);
+  const cuerpo = ns.length > 1 ? ns.map((n, i) => '— Nota ' + (i + 1) + ' —\n' + n).join('\n\n') : (ns[0] || '');
+  const txt = (o.num || '') + ' · ' + tkX.nombre(x) + '\nProyecto: ' + x.proy + (f ? '\nFecha límite: ' + formatDate(f) : '') + '\n\n' + cuerpo;
   let copiado = false;
   try { const ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); copiado = document.execCommand('copy'); ta.remove(); } catch (e) { copiado = false; }
   if (!copiado && navigator.clipboard && navigator.clipboard.writeText) { try { navigator.clipboard.writeText(txt); copiado = true; } catch (e) { /* sin portapapeles */ } }
@@ -5862,11 +5900,11 @@ function thAlternar(id) {
   if (emb) { o.hecha = !era; o.fechaHecha = era ? '' : embToday(); } else { o.done = !era; o.doneDate = era ? null : embToday(); }
   if (!era) repAlCompletar(x.kind, o, x.dueno);
   saveLocal(); renderSidebar(); showToast(era ? '↩ Tarea reabierta' : '✅ Tarea cumplida');
-  tkHoja(id);
+  _thN.keep = true; tkHoja(id);
 }
 function thSoporte(id) {
   const x = tkBuscarPorId(id); if (!x) return;
-  const c = { origen: 'tarea', origenId: x.o.id, origenTxt: tkX.nombre(x), onDone: () => { tkHoja(id); } };
+  const c = { origen: 'tarea', origenId: x.o.id, origenTxt: tkX.nombre(x), onDone: () => { _thN.keep = true; tkHoja(id); } };
   if (x.kind === 'mod') c.moduleId = x.dueno.id;
   else if (x.kind === 'emb') { c.moduleId = x.dueno.moduleId || ''; c.pid = x.dueno.id; c.empresa = x.dueno.nombre; }
   else c.proyecto = 'Checklist Maestro';
