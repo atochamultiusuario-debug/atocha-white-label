@@ -799,6 +799,7 @@ a.so-link:hover { text-decoration: underline; }
 .dark .imp-c select { background: var(--gray-800); color: var(--gray-100); border-color: var(--gray-600); }
 
 .ct-tabla .ls-nom { max-width:150px; } .ct-tabla td, .ct-tabla th { padding-left:7px; padding-right:7px; } .ct-tabla .so-ac { width:84px; }
+.ct-rapido input[type=text] { flex:1 1 150px; min-width:0; } .ct-rapido select { flex:0 1 190px; width:auto; }
 .ct-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
 .ct-chip { border:1.5px solid var(--gray-200,#E5E7EB); background:var(--white,#fff); color:var(--gray-700,#374151); border-radius:99px; font-size:12.5px; font-weight:600; padding:4px 11px; cursor:pointer; font-family:inherit; } .ct-chip b { color:var(--gray-400,#9CA3AF); margin-left:3px; }
 .ct-chip.on { background:var(--blue-600,#2563EB); border-color:var(--blue-600,#2563EB); color:#fff; } .ct-chip.on b { color:#DBEAFE; }
@@ -994,7 +995,7 @@ a.so-link:hover { text-decoration: underline; }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 29-oct · 16:00 · contactos</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 29-oct · 17:00 · contactos por proyecto</div>
     </div>
   </nav>
 
@@ -1279,7 +1280,7 @@ function renderContactos() {
     <div id="ct-lista"></div></div>`;
   ctPintar();
 }
-function ctForm(id) {
+function ctForm(id, modPre) {
   const c = id ? ctList().find(x => x.id === id) : null; if (id && !c) return;
   const v = k => embAttr(c ? c[k] || '' : '');
   setModal(`<h3>${c ? 'Editar contacto' : 'Nuevo contacto'}</h3>
@@ -1287,7 +1288,7 @@ function ctForm(id) {
     <div class="modal-field"><label>Tipo de relación</label><select id="ct-tipo">${Object.keys(CT_TIPOS).map(k => `<option value="${k}"${(c ? c.tipo : 'prospecto') === k ? ' selected' : ''}>${CT_TIPOS[k]}</option>`).join('')}</select></div>
     <div class="modal-field"><label>Empresa u organización</label><input type="text" id="ct-empresa" value="${v('empresa')}" maxlength="120"></div>
     <div class="modal-field"><label>Cargo</label><input type="text" id="ct-cargo" value="${v('cargo')}" maxlength="120"></div>
-    <div class="modal-field"><label>Proyectos <span class="emb-hint">marca los que apliquen</span></label><div class="ct-proys">${modsPorNumero().length ? modsPorNumero().map(m => `<label class="ct-pchk"><input type="checkbox" class="ct-p" value="${embAttr(m.id)}"${c && (c.proyectos || []).indexOf(m.id) >= 0 ? ' checked' : ''}> ${escHtml(modTxt(m))}</label>`).join('') : '<span class="so-mut">Aún no hay proyectos.</span>'}</div></div>
+    <div class="modal-field"><label>Proyectos <span class="emb-hint">marca los que apliquen</span></label><div class="ct-proys">${modsPorNumero().length ? modsPorNumero().map(m => `<label class="ct-pchk"><input type="checkbox" class="ct-p" value="${embAttr(m.id)}"${(c && (c.proyectos || []).indexOf(m.id) >= 0) || (!c && modPre === m.id) ? ' checked' : ''}> ${escHtml(modTxt(m))}</label>`).join('') : '<span class="so-mut">Aún no hay proyectos.</span>'}</div></div>
     <div class="modal-field"><label>Teléfono o WhatsApp</label><input type="text" id="ct-tel" value="${v('telefono')}" maxlength="40" inputmode="tel"></div>
     <div class="modal-field"><label>Correo</label><input type="text" id="ct-email" value="${v('email')}" maxlength="120" inputmode="email"></div>
     <div class="modal-field"><label>Ciudad</label><input type="text" id="ct-ciudad" value="${v('ciudad')}" maxlength="80"></div>
@@ -1303,17 +1304,48 @@ function ctGuardar(id) {
     proyectos: [...document.querySelectorAll('.ct-p:checked')].map(e => e.value) };
   const l = ctList();
   if (id) { const c = l.find(x => x.id === id); if (!c) return; Object.assign(c, d); }
-  else {
-    let mx = Number(state.contactoSeq) || 0; l.forEach(x => { const q = /^C-(\d+)$/.exec(x.cod || ''); if (q) mx = Math.max(mx, +q[1]); });
-    state.contactoSeq = mx + 1;
-    l.push(Object.assign({ id: 'ct_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), cod: 'C-' + String(mx + 1).padStart(3, '0'), creado: embToday() }, d));
-  }
-  closeModal(); saveLocal(); showToast(id ? '💾 Contacto actualizado' : '✅ Contacto agregado'); if (currentPage === 'contactos') renderContactos();
+  else ctCrear(d);
+  closeModal(); saveLocal(); showToast(id ? '💾 Contacto actualizado' : '✅ Contacto agregado'); ctRefrescar();
+}
+function ctCrear(d) {
+  const l = ctList();
+  let mx = Number(state.contactoSeq) || 0; l.forEach(x => { const q = /^C-(\d+)$/.exec(x.cod || ''); if (q) mx = Math.max(mx, +q[1]); });
+  state.contactoSeq = mx + 1;
+  const c = Object.assign({ id: 'ct_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), cod: 'C-' + String(mx + 1).padStart(3, '0'), creado: embToday() }, d);
+  l.push(c); return c;
+}
+function ctRefrescar() { if (currentPage === 'contactos') renderContactos(); else if (String(currentPage).indexOf('mod_') === 0) renderModule(currentPage.slice(4)); }
+// Contactos dentro de la página de cada proyecto
+function ctRapido(modId) {
+  const n = document.getElementById('ct-qn-' + modId), t = document.getElementById('ct-qt-' + modId), tel = document.getElementById('ct-qtel-' + modId);
+  const nombre = n ? n.value.trim() : ''; if (!nombre) { showToast('⚠️ Escribe el nombre del contacto'); if (n) n.focus(); return; }
+  ctCrear({ nombre, tipo: CT_TIPOS[t && t.value] ? t.value : 'prospecto', empresa: '', cargo: '', telefono: tel ? tel.value.trim() : '', email: '', ciudad: '', notas: '', proyectos: [modId] });
+  saveLocal(); showToast('✅ Contacto agregado'); ctRefrescar();
+}
+function ctProyHtml(m) {
+  const l = ctList().filter(c => (c.proyectos || []).indexOf(m.id) >= 0).sort((a, b) => String(a.nombre).localeCompare(String(b.nombre), 'es')), id = embAttr(m.id);
+  const fila = c => { const wa = embWa(c.telefono), ok = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(c.email || '');
+    return `<tr><td><span class="tk-num">${escHtml(c.cod || '')}</span></td><td class="ls-nom" title="${embAttr(c.nombre)}"><b>${escHtml(c.nombre)}</b>${c.empresa ? ' <span class="so-mut">· ' + escHtml(c.empresa) + '</span>' : ''}</td>
+      <td><span class="ct-tipo ct-${escHtml(c.tipo)}">${escHtml(CT_TIPOS[c.tipo] || 'Otro')}</span></td>
+      <td>${c.telefono ? escHtml(c.telefono) + (wa ? ` <a class="ct-wa" href="${embAttr(wa)}" target="_blank" rel="noopener" title="Abrir WhatsApp">💬</a>` : '') : '—'}</td>
+      <td class="ls-nom">${c.email ? (ok ? `<a href="mailto:${embAttr(c.email)}">${escHtml(c.email)}</a>` : escHtml(c.email)) : '—'}</td>
+      <td class="so-ac"><button type="button" class="dt-btn" title="Editar" onclick="ctForm('${embAttr(c.id)}')">✏️</button><button type="button" class="dt-btn dt-del" title="Eliminar" onclick="ctBorrar('${embAttr(c.id)}')">🗑</button></td></tr>`; };
+  return `<div class="card so-card" id="ct-proy-${id}">
+    <div class="so-cab"><div><div class="card-title" style="margin:0">Contactos del proyecto${l.length ? ' (' + l.length + ')' : ''}</div>
+      <div class="so-sub">Las personas ligadas a este proyecto. Se clasifican por tipo de relación.</div></div>
+      <div class="so-btns"><button type="button" class="edit-btn" onclick="ctForm('', '${id}')">+ Con más datos</button>${l.length ? `<button type="button" class="edit-btn" onclick="ctF={tipo:'',proy:'${id}',q:''};goPage('contactos')">Ver en Contactos</button>` : ''}</div></div>
+    <div class="task-form ct-rapido">
+      <input type="text" id="ct-qn-${id}" placeholder="Nuevo contacto…" maxlength="120" autocomplete="off" onkeydown="if(event.key==='Enter')ctRapido('${id}')">
+      <input type="text" id="ct-qtel-${id}" placeholder="Teléfono (opcional)" maxlength="40" inputmode="tel" onkeydown="if(event.key==='Enter')ctRapido('${id}')">
+      <select id="ct-qt-${id}">${Object.keys(CT_TIPOS).map(k => `<option value="${k}"${k === 'prospecto' ? ' selected' : ''}>${CT_TIPOS[k]}</option>`).join('')}</select>
+      <button class="btn-add" onclick="ctRapido('${id}')">+ Agregar</button></div>
+    ${l.length ? `<div class="so-scroll"><table class="so-tabla ls-tabla ct-tabla"><thead><tr><th>N°</th><th>Nombre</th><th>Tipo</th><th>Teléfono</th><th>Correo</th><th></th></tr></thead><tbody>${l.map(fila).join('')}</tbody></table></div>` : '<div class="emb-none" style="padding:14px 4px">Aún no hay contactos en este proyecto. Escribe un nombre arriba y pulsa "+ Agregar".</div>'}
+  </div>`;
 }
 function ctBorrar(id) {
   const c = ctList().find(x => x.id === id); if (!c) return;
   if (!confirm('¿Eliminar el contacto ' + (c.cod || '') + ' "' + c.nombre + '"?')) return;
-  state.contactos = ctList().filter(x => x.id !== id); saveLocal(); showToast('🗑 Contacto eliminado'); renderContactos();
+  state.contactos = ctList().filter(x => x.id !== id); saveLocal(); showToast('🗑 Contacto eliminado'); ctRefrescar();
 }
 function ctDatos() {
   const l = ctFiltrados();
@@ -2794,7 +2826,7 @@ function renderModule(id) {
     </div>
   </div>`;
 
-  document.getElementById('page-content').innerHTML = html + soProyHtml(m) + modEmbudoProyHtml(m) + modEmbudoHtml(m);
+  document.getElementById('page-content').innerHTML = html + ctProyHtml(m) + soProyHtml(m) + modEmbudoProyHtml(m) + modEmbudoHtml(m);
 }
 
 function renderTaskList(tasks, modId) {
