@@ -986,7 +986,7 @@ a.so-link:hover { text-decoration: underline; }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 28-oct · 19:30 · notas a pantalla completa</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 29-oct · 14:30 · selector de cuenta</div>
     </div>
   </nav>
 
@@ -5044,7 +5044,7 @@ async function authAsegurar() {
 }
 function authLogin() {
   const b = document.getElementById('lg-btn'); if (b) { b.disabled = true; b.style.opacity = '.6'; }
-  location.href = APP_CONFIG.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(location.origin + location.pathname);
+  location.href = APP_CONFIG.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/authorize?provider=google&prompt=select_account&redirect_to=' + encodeURIComponent(location.origin + location.pathname);
 }
 async function authSalir() {
   if (!confirm('¿Cerrar sesión? Tus datos siguen guardados en tu cuenta. Si tienes cambios sin subir, pulsa ☁️ Subir antes de salir.')) return;
