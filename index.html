@@ -897,6 +897,42 @@ body.visor-on { background: var(--gray-100); }
 .cpv-nov { padding:7px 0; border-top:1px solid #E2E8F0; font-size:13.5px; } .cpv-nov small { display:block; color:#64748B; font-size:11.5px; }
 .cpv-feed { cursor:pointer; } .cpv-feed:hover { background:var(--gray-100); }
 @media (max-width:520px) { .cpv-dl { grid-template-columns:1fr; } .cpv-dl dt { margin-top:4px; } }
+
+/* ── Carrusel de etapas (celular) ── */
+.cpv-car { display:none; background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(15,23,42,.08); margin-bottom:14px; overflow:hidden; border-top:5px solid var(--c, #64748B); }
+.cpv-car-h { display:flex; align-items:center; gap:6px; padding:10px 8px 4px; }
+.cpv-car-t { flex:1; text-align:center; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.cpv-car-t small { font-size:11px; font-weight:700; color:#64748B; letter-spacing:.4px; text-transform:uppercase; }
+.cpv-car-t b { font-size:21px; color:#0F172A; line-height:1.2; }
+.cpv-car-t span { font-size:13px; color:#475569; }
+.cpv-arr { flex:0 0 auto; width:48px; height:48px; border-radius:50%; border:none; background:var(--c, #2563EB); color:#fff; font-size:30px; line-height:1; cursor:pointer; padding:0 0 4px; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+.cpv-arr:disabled { opacity:.25; box-shadow:none; }
+.cpv-dots { display:flex; justify-content:center; gap:2px; padding:4px 6px 8px; }
+.cpv-dots button { flex:0 1 34px; min-width:0; border:none; background:none; padding:4px 0; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.cpv-dots i { width:10px; height:10px; border-radius:50%; background:var(--c); opacity:.35; transition:all .2s; }
+.cpv-dots button.on i { width:14px; height:14px; opacity:1; box-shadow:0 0 0 3px rgba(15,23,42,.12); }
+.cpv-dots em { font-style:normal; font-size:10px; font-weight:700; color:#64748B; min-height:12px; }
+.cpv-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; height:calc(100vh - 290px); height:calc(100dvh - 290px); min-height:260px; background:#F8FAFC; }
+.cpv-track::-webkit-scrollbar { display:none; }
+.cpv-slide { flex:0 0 100%; scroll-snap-align:start; scroll-snap-stop:always; overflow-y:auto; padding:12px; box-sizing:border-box; }
+.cpv-card { display:flex; justify-content:space-between; align-items:center; gap:10px; background:#fff; border:1px solid #E2E8F0; border-radius:12px; padding:14px; margin-bottom:10px; cursor:pointer; }
+.cpv-card b { font-size:16px; color:#0F172A; overflow-wrap:anywhere; }
+.cpv-go { color:#2563EB; font-weight:700; font-size:13px; white-space:nowrap; }
+.cpv-vacia { text-align:center; color:#64748B; padding:40px 16px; font-size:15px; line-height:1.5; } .cpv-vacia small { color:#94A3B8; }
+.cpv-hint { text-align:center; font-size:12px; color:#1D4ED8; font-weight:600; padding:0 8px 8px; background:#fff; transition:opacity .4s; }
+.cpv-hint.off { opacity:0; height:0; padding:0; overflow:hidden; }
+@keyframes cpvPulso { 0%,100% { transform:scale(1); } 50% { transform:scale(1.14); } }
+.cpv-hint:not(.off) ~ * {}
+.cpv-car:has(.cpv-hint:not(.off)) #cpv-next:not(:disabled) { animation:cpvPulso 1.3s ease-in-out 4; }
+@media (max-width:760px) {
+  .cpv-car { display:block; } .cpv-desk { display:none; }
+  #visor { padding:12px 12px 50px; }
+  .cpv-top { margin-bottom:10px; flex-wrap:nowrap; align-items:flex-start; } .cpv-top h1 { font-size:18px; margin:4px 0 0; } .cpv-top small { font-size:11.5px; }
+  .cpv-ref { padding:8px 10px; font-size:12px; white-space:nowrap; }
+  .cpv-resumen { padding:14px; } .cpv-resumen .dash-resumen { margin-bottom:0; }
+}
+.cpv-ct { padding:9px 0; border-top:1px solid var(--gray-200); font-size:14px; overflow-wrap:anywhere; } .cpv-ct b { color:var(--gray-900); }
+.cpv-sub { font-size:12.5px; color:var(--gray-600); margin-top:2px; } .cpv-sub a { color:#2563EB; margin-right:8px; }
 </style>
 <body>
 
@@ -1032,7 +1068,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 30-oct · enlace de invitado (solo lectura)</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 30-oct · invitado: etapas, contactos y documentos</div>
     </div>
   </nav>
 
@@ -5171,7 +5207,9 @@ function cpPayload(m) {
   });
   return { v: 1, emp: state.company || '', proy: { cod: m.cod || '', nombre: m.name || '' },
     cols: cols.map(c => ({ id: c.id, name: c.name, color: c.color })), pros,
-    tareas: (m.tasks || []).map(t => ({ n: t.name || '', f: t.date || '', h: t.done ? 1 : 0 })) };
+    tareas: (m.tasks || []).map(t => ({ n: t.name || '', f: t.date || '', h: t.done ? 1 : 0 })),
+    con: ctList().filter(c => (c.proyectos || []).indexOf(m.id) >= 0).map(c => ({ cod: c.cod || '', n: c.nombre || '', t: CT_TIPOS[c.tipo] || '', em: c.empresa || '', ca: c.cargo || '', tel: c.telefono || '', ema: c.email || '', ci: c.ciudad || '', no: c.notas || '' })),
+    docs: soList().filter(s => s.moduleId === m.id).sort((a, b) => b.n - a.n).map(s => ({ cod: soCodigo(s), t: s.titulo || '', k: s.tipo || '', f: s.fecha || '', u: s.url || '', e: s.empresa || '' })) };
 }
 // Devuelve true si publicó, false si falló, 'falta' si la base aún no tiene el script.
 async function cpRpc(fn, args) {
@@ -5199,7 +5237,7 @@ function cpAbrir(modId) {
     setModal(`<h3>🔗 Compartir ${escHtml(modTxt(m))}</h3>
       <p style="font-size:14px;line-height:1.55;color:var(--gray-600)">Crea un enlace corto para que otra persona <b>vea</b> este proyecto y su embudo (${n} ${n === 1 ? 'prospecto' : 'prospectos'}), sin instalar la app y sin iniciar sesión.</p>
       <div class="cp-info"><b>Solo puede mirar.</b> No puede editar, mover ni borrar nada, y no ve tus otros proyectos.<ul>
-        <li>Ve las etapas, los valores, los datos de contacto, las actividades y las novedades de cada prospecto.</li>
+        <li>Ve las etapas, los valores, los datos de contacto, las actividades y las novedades de cada prospecto, y los contactos y documentos del proyecto.</li>
         <li>No ve las notas de tus tareas ni tus ingresos.</li></ul></div>
       <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="cpCrear('${id}')">Crear enlace</button></div>`, 520);
     return;
@@ -5209,7 +5247,7 @@ function cpAbrir(modId) {
     <div class="cp-link"><input type="text" id="cp-url" readonly value="${embAttr(url)}" onclick="this.select()"><button class="btn-add" type="button" onclick="cpCopiarEnlace()">Copiar enlace</button></div>
     <div class="modal-actions" style="justify-content:flex-start;margin:0 0 4px"><button class="btn-confirm" type="button" onclick="cpWa()">Enviar por WhatsApp</button><button class="btn-cancel" type="button" onclick="cpCopiarMsg()">Copiar mensaje</button></div>
     <div class="cp-fila"><div class="cp-qr">${QRB.svg(url, 150)}Código QR</div>
-      <div class="cp-info"><b>Quien abre el enlace solo puede mirar.</b> Ve las ${n} ${n === 1 ? 'empresa' : 'empresas'} del embudo con sus etapas, valores, contactos, actividades y novedades.<ul>
+      <div class="cp-info"><b>Quien abre el enlace solo puede mirar.</b> Ve las ${n} ${n === 1 ? 'empresa' : 'empresas'} del embudo con sus etapas, valores, contactos, actividades y novedades, y además los contactos y los documentos (soportes) de este proyecto.<ul>
         <li>Se actualiza cada vez que pulsas <b>Subir</b>, o aquí mismo con "Actualizar ahora".</li>
         <li>Última actualización: ${s.ult ? escHtml(embFechaHora(s.ult)) : 'recién creado'}</li>
         <li>Compártelo solo con quien debe verlo: cualquiera que tenga el enlace puede abrirlo.</li></ul></div></div>
@@ -5277,7 +5315,7 @@ async function cpVisor() {
   document.title = 'Proyecto compartido';
   await cpVisorCargar();
   setInterval(() => { if (!document.hidden) cpVisorCargar(true); }, 120000);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') cpVisorCerrar(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cpVisorCerrar(); else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !document.querySelector('.cpv-ficha')) cpvIr(e.key === 'ArrowRight' ? 1 : -1); });
 }
 async function cpVisorCargar(silencio) {
   const v = document.getElementById('visor'), code = new URLSearchParams(location.search).get('v');
@@ -5293,36 +5331,84 @@ async function cpVisorCargar(silencio) {
     if (!silencio || !cpD) v.innerHTML = '<div class="cpv-msg">No se pudo cargar. Revisa tu conexión.<br><br><button class="btn-add" type="button" onclick="cpVisorCargar()">Reintentar</button></div>';
   }
 }
+let cpvIdx = -1;
 function cpVisorRender() {
   const d = cpD, v = document.getElementById('visor'), pros = d.pros || [], cols = d.cols || [];
   const act = pros.reduce((t, p) => t + (p.a ? (Number(p.m) || 0) : 0), 0), esp = act + pros.reduce((t, p) => t + (Number(p.e) || 0), 0);
   const nom = (d.proy.cod ? d.proy.cod + ' · ' : '') + (d.proy.nombre || '');
+  const itemsDe = c => pros.filter(p => p.c === c.id).sort((a, b) => (Number(b.m) || 0) - (Number(a.m) || 0));
+  const tags = p => { const pend = (p.ac || []).filter(a => !a.h).length;
+    return `${p.niv ? `<span class="seg-tag n${p.niv}">${p.dias} días sin novedad</span>` : ''}${pend ? `<span class="seg-tag">${pend} ${pend === 1 ? 'tarea' : 'tareas'}</span>` : ''}`; };
   const col = c => {
-    const items = pros.filter(p => p.c === c.id).sort((a, b) => (Number(b.m) || 0) - (Number(a.m) || 0));
-    const suma = items.reduce((t, p) => t + (Number(p.m) || 0), 0);
+    const items = itemsDe(c), suma = items.reduce((t, p) => t + (Number(p.m) || 0), 0);
     return `<div class="mp-col"><div class="mp-col-h"><i style="background:${embAttr(c.color || '#64748B')}"></i><span>${escHtml(c.name)}</span><em>${items.length}</em></div>
       <div class="mp-col-s">${suma ? cpPesos(suma) + ' / mes' : '&nbsp;'}</div>
-      ${items.map(p => { const pend = (p.ac || []).filter(a => !a.h).length;
-        return `<div class="mp-card" onclick="cpFicha('${embAttr(p.id)}')"><b>${escHtml(p.n)}</b>
-          <div class="mp-cm">${Number(p.m) ? cpPesos(p.m) + '/mes' : 'Sin mensualidad'}</div>
-          <div class="mp-ct">${p.niv ? `<span class="seg-tag n${p.niv}">${p.dias} días sin novedad</span>` : ''}${pend ? `<span class="seg-tag">${pend} ${pend === 1 ? 'tarea' : 'tareas'}</span>` : ''}</div></div>`; }).join('') || '<div class="mp-vacia">Sin empresas</div>'}</div>`;
+      ${items.map(p => `<div class="mp-card" onclick="cpFicha('${embAttr(p.id)}')"><b>${escHtml(p.n)}</b>
+          <div class="mp-cm">${Number(p.m) ? cpPesos(p.m) + '/mes' : 'Sin mensualidad'}</div><div class="mp-ct">${tags(p)}</div></div>`).join('') || '<div class="mp-vacia">Sin empresas</div>'}</div>`;
   };
+  const slide = c => { const items = itemsDe(c);
+    return `<section class="cpv-slide">${items.map(p => `<div class="cpv-card" onclick="cpFicha('${embAttr(p.id)}')"><div><b>${escHtml(p.n)}</b>
+        <div class="mp-cm">${Number(p.m) ? cpPesos(p.m) + '/mes' : 'Sin mensualidad'}</div><div class="mp-ct">${tags(p)}</div></div><span class="cpv-go">Ver ›</span></div>`).join('')
+      || '<div class="cpv-vacia">Ninguna empresa está en esta etapa todavía.<br><small>Desliza para ver las demás etapas.</small></div>'}</section>`; };
+  if (cpvIdx < 0 || cpvIdx >= cols.length) { const f = cols.findIndex(c => itemsDe(c).length); cpvIdx = f < 0 ? 0 : f; }
   const feed = [];
   pros.forEach(p => (p.bi || []).forEach(b => feed.push({ p, b })));
   feed.sort((a, b) => (a.b.f < b.b.f ? 1 : -1));
   const tareas = (d.tareas || []).slice().sort((a, b) => (a.h - b.h) || ((a.f || '9999') < (b.f || '9999') ? -1 : 1));
   v.innerHTML = `<div class="cpv-top"><div><span class="cpv-badge">👁 Vista de invitado · solo lectura</span><h1>${escHtml(nom)}</h1>
       <small>${escHtml(d.emp || '')}${d.emp ? ' · ' : ''}Actualizado ${escHtml(cpFH(d.actualizado))}</small></div>
-      <button class="btn-add" type="button" onclick="cpVisorCargar()">↻ Actualizar</button></div>
-    <div class="card"><div class="dash-resumen">
+      <button class="btn-add cpv-ref" type="button" onclick="cpVisorCargar()">↻ Actualizar</button></div>
+    ${cols.length ? `<div class="cpv-car" id="cpv-car">
+      <div class="cpv-car-h"><button type="button" class="cpv-arr" id="cpv-prev" aria-label="Etapa anterior" onclick="cpvIr(-1)">‹</button>
+        <div class="cpv-car-t"><small id="cpv-pos"></small><b id="cpv-n"></b><span id="cpv-s"></span></div>
+        <button type="button" class="cpv-arr" id="cpv-next" aria-label="Etapa siguiente" onclick="cpvIr(1)">›</button></div>
+      <div class="cpv-dots" id="cpv-dots">${cols.map((c, i) => `<button type="button" aria-label="${embAttr(c.name)}" onclick="cpvIrA(${i})"><i style="--c:${embAttr(c.color || '#64748B')}"></i><em>${itemsDe(c).length || ''}</em></button>`).join('')}</div>
+      <div class="cpv-hint" id="cpv-hint">← Desliza o usa las flechas para ver cada etapa →</div>
+      <div class="cpv-track" id="cpv-track" onscroll="cpvScroll()">${cols.map(slide).join('')}</div>
+    </div>` : ''}
+    <div class="card cpv-resumen"><div class="dash-resumen">
       <div><span>Prospectos</span><b>${pros.length}</b></div><div><span>Ya cobra</span><b>${cpPesos(act)}</b></div>
       <div><span>Esperado por mes</span><b style="color:var(--blue-600)">${cpPesos(esp)}</b></div></div>
-      <div class="mp-board">${cols.map(col).join('')}</div></div>
+      <div class="mp-board cpv-desk">${cols.map(col).join('')}</div></div>
     <div class="card" style="margin-top:16px"><div class="card-title">Novedades recientes</div>
       ${feed.slice(0, 15).map(({ p, b }) => `<div class="cpv-nov cpv-feed" onclick="cpFicha('${embAttr(p.id)}')"><small>${b.c ? '📞 Contacto · ' : ''}${escHtml(cpFH(b.f))} · <b>${escHtml(p.n)}</b></small>${escHtml(b.t)}</div>`).join('') || '<div class="emb-none">Todavía no hay novedades.</div>'}</div>
+    ${(d.con || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Contactos del proyecto (${d.con.length})</div>${d.con.map(c => { const wa = embWa(c.tel); return `<div class="cpv-ct">
+        <div><b>${escHtml(c.n)}</b>${c.t ? ` <span class="seg-tag">${escHtml(c.t)}</span>` : ''}</div>
+        ${c.em || c.ca ? `<div class="cpv-sub">${escHtml([c.em, c.ca].filter(Boolean).join(' · '))}</div>` : ''}
+        <div class="cpv-sub">${c.tel ? (wa ? `<a href="${embAttr(wa)}" target="_blank" rel="noopener noreferrer">📱 ${escHtml(c.tel)}</a>` : '📱 ' + escHtml(c.tel)) : ''}${c.ema ? ` <a href="mailto:${embAttr(c.ema)}">✉️ ${escHtml(c.ema)}</a>` : ''}${c.ci ? ' · ' + escHtml(c.ci) : ''}</div>
+        ${c.no ? `<div class="cpv-sub" style="white-space:pre-wrap">${escHtml(c.no)}</div>` : ''}</div>`; }).join('')}</div>` : ''}
+    ${(d.docs || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentos del proyecto (${d.docs.length})</div>${d.docs.map(s => { const u = embUrlSegura(s.u); return `<div class="cpv-ct">
+        <div><span class="tk-num">${escHtml(s.cod)}</span>${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.t)}</b></a>` : `<b>${escHtml(s.t)}</b>`}</div>
+        <div class="cpv-sub">${escHtml([s.k, cpF(s.f), s.e].filter(Boolean).join(' · '))}</div></div>`; }).join('')}<div class="cpv-sub" style="margin-top:8px">Los documentos se abren en Google Drive: si te pide permiso, solicítalo a quien te compartió este enlace.</div></div>` : ''}
     ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
     <div id="cpv-ov-slot"></div>`;
+  const tr = document.getElementById('cpv-track');
+  if (tr) { cpvCab(); requestAnimationFrame(() => { tr.scrollLeft = cpvIdx * tr.clientWidth; }); }
 }
+function cpvCab() {
+  const cols = (cpD && cpD.cols) || [], c = cols[cpvIdx]; if (!c) return;
+  const n = (cpD.pros || []).filter(p => p.c === c.id), suma = n.reduce((t, p) => t + (Number(p.m) || 0), 0);
+  const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+  set('cpv-pos', 'Etapa ' + (cpvIdx + 1) + ' de ' + cols.length); set('cpv-n', c.name);
+  set('cpv-s', n.length ? n.length + (n.length === 1 ? ' empresa' : ' empresas') + (suma ? ' · ' + cpPesos(suma) + ' / mes' : '') : 'Sin empresas');
+  const car = document.getElementById('cpv-car'); if (car) car.style.setProperty('--c', c.color || '#64748B');
+  const pv = document.getElementById('cpv-prev'), nx = document.getElementById('cpv-next');
+  if (pv) pv.disabled = cpvIdx === 0; if (nx) nx.disabled = cpvIdx === cols.length - 1;
+  document.querySelectorAll('#cpv-dots button').forEach((b, i) => b.classList.toggle('on', i === cpvIdx));
+}
+function cpvScroll() {
+  const tr = document.getElementById('cpv-track'); if (!tr || !tr.clientWidth) return;
+  const i = Math.round(tr.scrollLeft / tr.clientWidth);
+  if (i !== cpvIdx && i >= 0 && i < tr.children.length) { cpvIdx = i; cpvCab(); }
+  const h = document.getElementById('cpv-hint'); if (h && tr.scrollLeft > 4) h.classList.add('off');
+}
+function cpvIrA(i) {
+  const tr = document.getElementById('cpv-track'); if (!tr) return;
+  i = Math.max(0, Math.min(tr.children.length - 1, i));
+  tr.scrollTo({ left: i * tr.clientWidth, behavior: 'smooth' });
+  cpvIdx = i; cpvCab(); const h = document.getElementById('cpv-hint'); if (h) h.classList.add('off');
+}
+function cpvIr(d) { cpvIrA(cpvIdx + d); }
 function cpFicha(id) {
   const p = ((cpD && cpD.pros) || []).find(x => x.id === id); if (!p) return;
   const c = (cpD.cols || []).find(x => x.id === p.c) || { name: '', color: '#64748B' };
