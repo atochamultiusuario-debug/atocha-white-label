@@ -1076,7 +1076,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · STATUS también en tareas</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · STATUS visible en las tareas del proyecto</div>
     </div>
   </nav>
 
@@ -2391,7 +2391,7 @@ function tkFila(ctx, t, n, hoy, o) {
     <div class="dt-fila">
       <div class="dt-main"${nav}>
         <div class="ti-name">${t.name}</div>
-        <div class="ti-meta">${tkNumChip(t, ctx === 'ficha')}${o.sinOrigen ? (t.date ? (venc ? '<span style="color:var(--red);font-weight:700">' + formatDate(t.date) + ' (vencida)</span>' : formatDate(t.date)) : 'sin fecha') : meta}${o.prio && t.priority ? ' · <span class="task-priority p-' + t.priority + '">' + t.priority + '</span>' : ''}${o.sinOrigen && t.done && t.doneDate ? ' · ✅ ' + formatDate(t.doneDate) : ''}${o.sinOrigen ? repTag(t) : ''}</div>
+        <div class="ti-meta">${tkNumChip(t, ctx === 'ficha')}${o.sit ? sitChip(o.sit) + ' ' : ''}${o.sinOrigen ? (t.date ? (venc ? '<span style="color:var(--red);font-weight:700">' + formatDate(t.date) + ' (vencida)</span>' : formatDate(t.date)) : 'sin fecha') : meta}${o.prio && t.priority ? ' · <span class="task-priority p-' + t.priority + '">' + t.priority + '</span>' : ''}${o.sinOrigen && t.done && t.doneDate ? ' · ✅ ' + formatDate(t.doneDate) : ''}${o.sinOrigen ? repTag(t) : ''}</div>
       </div>
       <div class="dt-acts">
         <button type="button" class="dt-btn" title="${t.done ? 'Reabrir' : 'Marcar como cumplida'}" onclick="tkAccion('${ctx}','hecha',${n})">${t.done ? '↩' : '✓'}</button>
@@ -2934,7 +2934,7 @@ function renderModule(id) {
   </div>
 
   <div class="card">
-    <div class="card-title">Tareas del proyecto</div>
+    <div class="card-title">Tareas del proyecto ${sitChip(m)}</div>
     <div class="mod-action-bar">
       <button class="btn-mod-save" onclick="saveLocal();showToast('💾 Guardado')">💾 Guardar</button>
       <button class="btn-mod-sync" onclick="syncUp()">☁️ Subir a nube</button>
@@ -2964,7 +2964,7 @@ function renderTaskList(tasks, modId) {
   tkRegistrar('modt', items, () => renderModule(modId));
   if (!items.length) return `<div style="text-align:center;padding:24px;color:var(--gray-400);font-size:14px;">Sin tareas aún. ¡Agrega la primera!</div>`;
   const hoyD = hoyLocal();
-  return items.map((t, n) => tkFila('modt', t, n, hoyD, { nav: false, sinOrigen: true, prio: true })).join('');
+  return items.map((t, n) => tkFila('modt', t, n, hoyD, { nav: false, sinOrigen: true, prio: true, sit: m })).join('');
 }
 // Actividades del prospecto vinculado a este proyecto (las mismas que ve en el Embudo)
 function embDeProyecto(modId) { return embList().filter(p => p.moduleId === modId); }
@@ -3024,7 +3024,7 @@ function modEmbudoHtml(m) {
       <input type="date" id="ma-fecha-${embAttr(m.id)}">
       <button class="btn-add" onclick="modAddAct('${embAttr(m.id)}')">+ Agregar</button>
     </div>
-    <div class="tasks-list">${items.length ? items.map((t, n) => tkFila('mod', t, n, hoyD, { nav: false, sinOrigen: !varios })).join('') : '<div style="text-align:center;padding:18px;color:var(--gray-400);font-size:14px;">Sin actividades en el embudo.</div>'}</div>
+    <div class="tasks-list">${items.length ? items.map((t, n) => tkFila('mod', t, n, hoyD, { nav: false, sinOrigen: !varios, sit: m })).join('') : '<div style="text-align:center;padding:18px;color:var(--gray-400);font-size:14px;">Sin actividades en el embudo.</div>'}</div>
   </div>`;
 }
 function modAddAct(modId) {
@@ -5437,7 +5437,7 @@ function cpVisorRender() {
     ${(d.docs || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentos del proyecto (${d.docs.length})</div>${d.docs.map(s => { const u = embUrlSegura(s.u); return `<div class="cpv-ct">
         <div><span class="tk-num">${escHtml(s.cod)}</span>${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.t)}</b></a>` : `<b>${escHtml(s.t)}</b>`}</div>
         <div class="cpv-sub">${escHtml([s.k, cpF(s.f), s.e].filter(Boolean).join(' · '))}</div></div>`; }).join('')}<div class="cpv-sub" style="margin-top:8px">Los documentos se abren en Google Drive: si te pide permiso, solicítalo a quien te compartió este enlace.</div></div>` : ''}
-    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${d.proy.sit && SIT_T[d.proy.sit] ? `<span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span> ` : ''}${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
+    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto${d.proy.sit && SIT_T[d.proy.sit] ? ` <span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span>` : ''}</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${d.proy.sit && SIT_T[d.proy.sit] ? `<span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span> ` : ''}${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
     <div id="cpv-ov-slot"></div>`;
   const tr = document.getElementById('cpv-track');
   if (tr) { cpvCab(); requestAnimationFrame(() => { tr.scrollLeft = cpvIdx * tr.clientWidth; }); }
