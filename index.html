@@ -1076,7 +1076,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · STATUS visible en las tareas del proyecto</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · enlace de invitado se actualiza al abrir</div>
     </div>
   </nav>
 
@@ -1742,6 +1742,8 @@ function initApp() {
   snapGuardar('Automática', false);
   setTimeout(showCloudBanner, 800);
   setTimeout(recordatorioDia, 1600);
+  // Los enlaces de invitado se ponen al día solos cada vez que abres Atocha (sin tener que pulsar Subir).
+  setTimeout(() => { try { if (Object.keys(cpMap()).some(k => cpActivo(k)) && sbOk()) cpRepublicarTodos(); } catch (e) { /* sin conexión: queda para el próximo Subir */ } }, 2500);
 }
 
 window.addEventListener('DOMContentLoaded', () => { if (cpEsVisor()) cpVisor(); else arrancar(); });
