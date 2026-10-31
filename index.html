@@ -1076,7 +1076,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · PROGRESS con Build y Declined</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · STATUS también en tareas</div>
     </div>
   </nav>
 
@@ -1292,8 +1292,8 @@ function lsFiltrar(l, esT) {
   return l.filter(r => {
     if (lsF.proy && (esT ? (lsF.proy === '__none' ? !!r.m : !r.m || r.m.id !== lsF.proy) : r.m.id !== lsF.proy)) return false;
     if (lsF.est && (esT ? r.est !== lsF.est : r.st.key !== lsF.est)) return false;
-    if (!esT && lsF.sit && sitDe(r.m) !== lsF.sit) return false;
-    if (q && normTxt((esT ? [r.num, r.proyTxt, r.nombre] : [r.cod, r.nombre, r.st.label, SIT_T[sitDe(r.m)], PROG_T[progDe(r.m)], r.m.causa || '']).join(' ')).indexOf(q) < 0) return false;
+    if (lsF.sit && (esT ? (!r.m || sitDe(r.m) !== lsF.sit) : sitDe(r.m) !== lsF.sit)) return false;
+    if (q && normTxt((esT ? [r.num, r.proyTxt, r.nombre, r.m ? SIT_T[sitDe(r.m)] : ''] : [r.cod, r.nombre, r.st.label, SIT_T[sitDe(r.m)], PROG_T[progDe(r.m)], r.m.causa || '']).join(' ')).indexOf(q) < 0) return false;
     return true;
   });
 }
@@ -1310,10 +1310,11 @@ function lsTabla() {
   }
   const l = lsFiltrar(lsTareas(), true);
   if (!l.length) return '<div class="emb-none" style="padding:18px 4px">Ninguna tarea coincide.</div>';
-  return `<div class="so-scroll"><table class="so-tabla ls-tabla"><thead><tr><th>N° tarea</th><th>Proyecto</th><th>Tarea</th><th>Creación</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>${l.map(r => `<tr>
+  return `<div class="so-scroll"><table class="so-tabla ls-tabla"><thead><tr><th>N° tarea</th><th>Proyecto</th><th>Tarea</th><th>Status</th><th>Creación</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>${l.map(r => `<tr${r.m && !sitActivo(r.m) ? ' class="ls-inact"' : ''}>
     <td>${r.num ? `<button type="button" class="tk-num ls-num" onclick="tkHoja('${embAttr(r.id)}')" title="Abrir la tarea">${escHtml(r.num)}</button>${r.x.o.notas ? `<button type="button" class="tk-nota" onclick="tkHoja('${embAttr(r.id)}')" title="Tiene una nota guardada: ábrela">📝</button>` : ''}` : '—'}</td>
     <td>${r.m && r.m.cod ? `<button type="button" class="mcod ls-pl" onclick="goPage('mod_${embAttr(r.m.id)}')" title="${embAttr(r.proyTxt)}">${escHtml(r.m.cod)}</button>` : ''}<span class="ls-pn">${escHtml(r.m ? r.m.name : r.proyTxt)}</span></td>
-    <td class="ls-nom" title="${embAttr(r.nombre)}">${escHtml(r.nombre)}</td><td>${lsFecha(r.creada)}</td>
+    <td class="ls-nom" title="${embAttr(r.nombre)}">${escHtml(r.nombre)}</td>
+    <td>${r.m ? `<span title="${embAttr(r.m.causa || '')}">${sitChip(r.m)}</span>` : '—'}</td><td>${lsFecha(r.creada)}</td>
     <td${r.est === 'vencida' ? ' style="color:var(--red);font-weight:700"' : ''}>${lsFecha(r.fecha)}</td><td><span class="ls-est ${r.est}">${LS_EST_T[r.est]}</span></td></tr>`).join('')}</tbody></table></div><div class="so-total">${l.length} de ${lsTareas().length} tareas</div>`;
 }
 function renderListados() {
@@ -1326,7 +1327,7 @@ function renderListados() {
     <div class="so-filtros">
       <input type="text" id="ls-q" placeholder="Buscar…" value="${embAttr(lsF.q)}" oninput="lsF.q=this.value;lsPintar()">
       ${lsTab === 't' ? `<select onchange="lsF.proy=this.value;lsPintar()"><option value="">Todos los proyectos</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}"${lsF.proy === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}<option value="__none"${lsF.proy === '__none' ? ' selected' : ''}>Sin proyecto</option></select>` : ''}
-      ${lsTab === 'p' ? `<select onchange="lsF.sit=this.value;lsPintar()"><option value="">All status</option>${Object.keys(SIT_T).map(k => `<option value="${k}"${lsF.sit === k ? ' selected' : ''}>${SIT_T[k]}</option>`).join('')}</select>` : ''}
+      ${true ? `<select onchange="lsF.sit=this.value;lsPintar()"><option value="">All status</option>${Object.keys(SIT_T).map(k => `<option value="${k}"${lsF.sit === k ? ' selected' : ''}>${SIT_T[k]}</option>`).join('')}</select>` : ''}
       <select onchange="lsF.est=this.value;lsPintar()"><option value="">${lsTab === 'p' ? 'All phases' : 'Todos los estados'}</option>${optE.map(([k, n]) => `<option value="${k}"${lsF.est === k ? ' selected' : ''}>${escHtml(n)}</option>`).join('')}</select>
     </div><div id="ls-lista"></div></div>`;
   lsPintar();
@@ -1336,8 +1337,8 @@ function lsCambiar(t) { lsTab = t; lsF = { proy: '', est: '', q: '', sit: '' }; 
 function lsDatos() {
   if (lsTab === 'p') return { cab: ['N° proyecto', 'Nombre', 'Creación', 'Phase', 'Status', 'Causa', 'Progress', 'Tareas cumplidas', 'Tareas totales', 'Vencidas'],
     filas: lsFiltrar(lsProyectos(), false).map(r => [r.cod, r.nombre, r.creada, r.st.label, SIT_T[sitDe(r.m)], r.m.causa || '', PROG_T[progDe(r.m)], r.hechas, r.total, r.venc]), titulo: 'Listado de proyectos', arch: 'proyectos' };
-  return { cab: ['N° tarea', 'N° proyecto', 'Proyecto', 'Tarea', 'Creación', 'Vencimiento', 'Estado'],
-    filas: lsFiltrar(lsTareas(), true).map(r => [r.num, r.m ? r.m.cod || '' : '', r.m ? r.m.name : r.proyTxt, r.nombre, r.creada, r.fecha, LS_EST_T[r.est]]), titulo: 'Listado de tareas', arch: 'tareas' };
+  return { cab: ['N° tarea', 'N° proyecto', 'Proyecto', 'Tarea', 'Status', 'Creación', 'Vencimiento', 'Estado'],
+    filas: lsFiltrar(lsTareas(), true).map(r => [r.num, r.m ? r.m.cod || '' : '', r.m ? r.m.name : r.proyTxt, r.nombre, r.m ? SIT_T[sitDe(r.m)] : '', r.creada, r.fecha, LS_EST_T[r.est]]), titulo: 'Listado de tareas', arch: 'tareas' };
 }
 function lsCsv() {
   const d = lsDatos(); if (!d.filas.length) { showToast('No hay filas para descargar'); return; }
@@ -5436,7 +5437,7 @@ function cpVisorRender() {
     ${(d.docs || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentos del proyecto (${d.docs.length})</div>${d.docs.map(s => { const u = embUrlSegura(s.u); return `<div class="cpv-ct">
         <div><span class="tk-num">${escHtml(s.cod)}</span>${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.t)}</b></a>` : `<b>${escHtml(s.t)}</b>`}</div>
         <div class="cpv-sub">${escHtml([s.k, cpF(s.f), s.e].filter(Boolean).join(' · '))}</div></div>`; }).join('')}<div class="cpv-sub" style="margin-top:8px">Los documentos se abren en Google Drive: si te pide permiso, solicítalo a quien te compartió este enlace.</div></div>` : ''}
-    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
+    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${d.proy.sit && SIT_T[d.proy.sit] ? `<span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span> ` : ''}${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
     <div id="cpv-ov-slot"></div>`;
   const tr = document.getElementById('cpv-track');
   if (tr) { cpvCab(); requestAnimationFrame(() => { tr.scrollLeft = cpvIdx * tr.clientWidth; }); }
