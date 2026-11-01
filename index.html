@@ -943,6 +943,8 @@ body.visor-on { background: var(--gray-100); }
 .cpv-sit { display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:4px 0 2px; } .cpv-sit small { margin-left:6px; color:#475569; }
 .mc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px; padding-right:26px; } .mc-top .mc-icon { margin-bottom:0; flex:0 0 auto; }
 .mc-sit { margin-top:2px; text-align:right; line-height:1.9; } .mc-sit .prg { margin:0; } .mc-sit .sit { margin-left:4px; }
+.emb-prgrow { margin:-2px 0 2px; } .mp-pg { margin:3px 0 1px; } .mp-card .prg, .emb-card .prg, .cpv-card .prg { margin:0 4px 0 0; }
+.mp-ct .prg, .cpv-card .mp-ct .prg { margin-right:4px; }
 </style>
 <body>
 
@@ -1078,7 +1080,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 31-oct · PROGRESS en las tarjetas del Dashboard</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 1-nov · PROGRESS en cada prospecto</div>
     </div>
   </nav>
 
@@ -2987,6 +2989,7 @@ function modEmbudoProyHtml(m) {
       ${items.map(p => {
         const al = embAlerta(p), pend = (p.actividades || []).filter(a => !a.hecha).length, pid = embAttr(p.id);
         return `<div class="mp-card" onclick="embOpen('${pid}')" title="Abrir la ficha"><b>${escHtml(p.nombre)}</b>
+          <div class="mp-pg"><button type="button" class="sit-btn" onclick="event.stopPropagation();embProgAbrir('${pid}')" title="Cambiar progress">${prgChip(p)}</button></div>
           <div class="mp-cm">${Number(p.mensualidad) ? fmtCOP(p.mensualidad) + '/mes' : 'Sin mensualidad'}</div>
           <div class="mp-ct">${al.nivel ? `<span class="seg-tag n${al.nivel}">${al.dias} días sin novedad</span>` : ''}${embSinAccion(p) ? '<span class="seg-tag s">Sin próxima acción</span>' : ''}${pend ? `<span class="seg-tag">${pend} ${pend === 1 ? 'tarea' : 'tareas'}</span>` : ''}</div>
           <div class="mp-mv"><button type="button" title="Etapa anterior" ${i === 0 ? 'disabled' : ''} onclick="event.stopPropagation();embMoverP('${pid}',-1)">‹</button><button type="button" title="Etapa siguiente" ${i === cols.length - 1 ? 'disabled' : ''} onclick="event.stopPropagation();embMoverP('${pid}',1)">›</button></div></div>`;
@@ -3454,6 +3457,22 @@ function renderEmbudo() {
   if (nuevo && izq) nuevo.scrollLeft = izq;   // el tablero no vuelve al inicio al guardar algo
 }
 
+// ── PROGRESS de cada prospecto: cambio rápido desde su tarjeta ──
+function embProgAbrir(pid) {
+  const p = embList().find(x => x.id === pid); if (!p) return;
+  setModal(`<h3>PROGRESS · ${escHtml(p.nombre)}</h3>
+    <div class="modal-field"><label>PROGRESS</label><select id="ep-g">${Object.keys(PROG_T).map(k => `<option value="${k}"${k === progDe(p) ? ' selected' : ''}>${PROG_T[k]}</option>`).join('')}</select></div>
+    <div class="emb-hint" style="display:block;margin:-4px 0 10px"><b>Build</b>: se está construyendo o implementando. <b>Failed</b>: lo intentamos y no se logró. <b>Declined</b>: la otra parte dijo que no.</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="embProgGuardar('${embAttr(pid)}')">Guardar</button></div>`, 420);
+}
+function embProgGuardar(pid) {
+  const p = embList().find(x => x.id === pid); if (!p) return;
+  const g = document.getElementById('ep-g').value; if (!PROG_T[g]) return;
+  if (g !== progDe(p)) embLog(p, 'Progress: ' + PROG_T[progDe(p)] + ' → ' + PROG_T[g]);
+  p.prog = g; saveLocal(); closeModal(); renderSidebar();
+  if (currentPage === 'embudo') renderEmbudo(); else goPage(currentPage);
+  showToast('✅ ' + PROG_T[g]);
+}
 function embCard(p, idx) {
   const m = Number(p.mensualidad) || 0;
   const v = Number(p.valorProyecto) || 0;
@@ -3479,6 +3498,7 @@ function embCard(p, idx) {
   return `
   <div class="emb-card">
     <button class="emb-name" onclick="embOpen('${id}')">${escHtml(p.nombre)}</button>
+    <div class="emb-prgrow"><button type="button" class="sit-btn" onclick="embProgAbrir('${id}')" title="Cambiar progress">${prgChip(p)}</button></div>
     ${p.rubro ? `<div class="emb-rubro">${escHtml(p.rubro)}</div>` : ''}
     <div class="emb-money">
       <span class="emb-fee${m ? '' : ' zero'}">${m ? fmtCOP(m) + ' /mes' : 'Sin mensualidad'}</span>
@@ -3632,6 +3652,7 @@ function embOpen(id, etapaForzada) {
       </div>
       <div class="modal-field"><label>Mensualidad (COP)</label><input type="text" id="emb-mens" inputmode="numeric" value="${mens ? mens.toLocaleString('es-CO') : ''}" oninput="formatCOPInput(this)"></div>
     </div>
+    <div class="modal-field"><label>PROGRESS <span class="emb-hint">cómo va este prospecto</span></label><select id="emb-prog">${Object.keys(PROG_T).map(k => `<option value="${k}"${k === progDe(p) ? ' selected' : ''}>${PROG_T[k]}</option>`).join('')}</select></div>
     <div class="modal-field"><label>Valor estimado del proyecto (COP, opcional)</label><input type="text" id="emb-proy" inputmode="numeric" value="${proy ? proy.toLocaleString('es-CO') : ''}" oninput="formatCOPInput(this)"></div>
     <div class="modal-field"><label>Servicios del paquete</label>
       <div class="emb-checks">${EMB_SERVICES.map((s, i) => `<label class="emb-check"><input type="checkbox" id="emb-serv-${i}"${servs.indexOf(s) >= 0 ? ' checked' : ''}>${s}</label>`).join('')}</div>
@@ -3765,8 +3786,10 @@ function embSave() {
     responsable: document.getElementById('emb-resp').value.trim(),
     moduleId: document.getElementById('emb-modulo').value,
     motivoPerdido: document.getElementById('emb-motivo').value.trim(),
-    notas: document.getElementById('emb-notas').value.trim()
+    notas: document.getElementById('emb-notas').value.trim(),
+    prog: document.getElementById('emb-prog').value
   };
+  if (!PROG_T[data.prog]) data.prog = 'inprogress';
   const list = embList();
   const cur = embEditId ? list.find(x => x.id === embEditId) : null;
   let nuevoId = null;
@@ -3775,6 +3798,7 @@ function embSave() {
       embLog(cur, 'Etapa: ' + embNombreEtapaP(cur) + ' → ' + embNombreEtapaP(data) +
         (data.etapa === 'perdido' && data.motivoPerdido ? '. Motivo: ' + data.motivoPerdido : ''));
     }
+    if (progDe(cur) !== data.prog) embLog(cur, 'Progress: ' + PROG_T[progDe(cur)] + ' → ' + PROG_T[data.prog]);
     Object.assign(cur, data);
     if (!cur.moduleId) delete cur.moduleId;
     embSincEtapaP(cur);
@@ -5258,7 +5282,7 @@ function cpPayload(m) {
   const pros = embDeProyecto(m.id).map(p => {
     const al = embAlerta(p), mens = Number(p.mensualidad) || 0, fin = p.etapa === 'activo' || p.etapa === 'perdido';
     return { id: String(p.id), n: p.nombre || '', r: p.rubro || '', c: (propias ? (embEtapaPDe(p) || {}).id : p.etapa) || p.etapa,
-      m: mens, v: Number(p.valorProyecto) || 0, a: p.etapa === 'activo' ? 1 : 0, x: p.etapa === 'perdido' ? 1 : 0,
+      g: progDe(p), m: mens, v: Number(p.valorProyecto) || 0, a: p.etapa === 'activo' ? 1 : 0, x: p.etapa === 'perdido' ? 1 : 0,
       e: fin ? 0 : Math.round(mens * embProb(p.etapa, p.moduleId) / 100), dias: embDiasSinNovedad(p), niv: al.nivel,
       ct: p.contacto || '', tel: p.telefono || '', em: p.email || '', ci: p.ciudad || '', rs: p.responsable || '', d: p.desde || '',
       no: p.notas || '', mo: p.etapa === 'perdido' ? (p.motivoPerdido || '') : '',
@@ -5399,7 +5423,7 @@ function cpVisorRender() {
   const nom = (d.proy.cod ? d.proy.cod + ' · ' : '') + (d.proy.nombre || '');
   const itemsDe = c => pros.filter(p => p.c === c.id).sort((a, b) => (Number(b.m) || 0) - (Number(a.m) || 0));
   const tags = p => { const pend = (p.ac || []).filter(a => !a.h).length;
-    return `${p.niv ? `<span class="seg-tag n${p.niv}">${p.dias} días sin novedad</span>` : ''}${pend ? `<span class="seg-tag">${pend} ${pend === 1 ? 'tarea' : 'tareas'}</span>` : ''}`; };
+    return `${p.g && PROG_T[p.g] ? `<span class="prg prg-${embAttr(p.g)}">${escHtml(PROG_T[p.g])}</span>` : ''}${p.niv ? `<span class="seg-tag n${p.niv}">${p.dias} días sin novedad</span>` : ''}${pend ? `<span class="seg-tag">${pend} ${pend === 1 ? 'tarea' : 'tareas'}</span>` : ''}`; };
   const col = c => {
     const items = itemsDe(c), suma = items.reduce((t, p) => t + (Number(p.m) || 0), 0);
     return `<div class="mp-col"><div class="mp-col-h"><i style="background:${embAttr(c.color || '#64748B')}"></i><span>${escHtml(c.name)}</span><em>${items.length}</em></div>
@@ -5479,7 +5503,7 @@ function cpFicha(id) {
   const li = a => `<div class="cpv-li${a.h ? ' hecha' : ''}"><span>${escHtml(a.t)}</span><em>${escHtml(cpF(a.h ? a.fh : a.f))}</em></div>`;
   const bits = (p.bi || []).slice().sort((a, b) => (a.f < b.f ? 1 : -1));
   document.getElementById('cpv-ov-slot').innerHTML = `<div class="cpv-ov" onclick="if(event.target===this)cpVisorCerrar()"><div class="cpv-ficha">
-    <h3>${escHtml(p.n)}</h3><span class="cpv-et" style="background:${embAttr(c.color || '#64748B')}">${escHtml(c.name)}</span>
+    <h3>${escHtml(p.n)}</h3><span class="cpv-et" style="background:${embAttr(c.color || '#64748B')}">${escHtml(c.name)}</span>${p.g && PROG_T[p.g] ? ` <span class="prg prg-${embAttr(p.g)}">${escHtml(PROG_T[p.g])}</span>` : ''}
     <dl class="cpv-dl">${row('Qué hace', escHtml(p.r))}${row('Mensualidad', p.m ? cpPesos(p.m) : '')}${row('Valor del proyecto', p.v ? cpPesos(p.v) : '')}${row('Responsable', escHtml(p.rs))}
       ${row('Contacto', escHtml(p.ct))}${row('Teléfono', p.tel ? (wa ? `<a href="${embAttr(wa)}" target="_blank" rel="noopener noreferrer">${escHtml(p.tel)}</a>` : escHtml(p.tel)) : '')}
       ${row('Correo', escHtml(p.em))}${row('Ciudad', escHtml(p.ci))}${row('En seguimiento desde', escHtml(cpF(p.d)))}${row('Motivo de pérdida', escHtml(p.mo))}</dl>
