@@ -1119,7 +1119,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Crear: rutina, gestión, trámite, actividad</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · tarjeta Rutinas de hoy</div>
     </div>
   </nav>
 
@@ -2287,7 +2287,7 @@ function renderDashboard() {
   const embIngresoActivo = embAll.filter(p => p.etapa === 'activo').reduce((t, p) => t + (Number(p.mensualidad) || 0), 0);
   const embClientes = embAll.filter(p => p.etapa === 'activo').length;
   const embEnCurso = embAll.filter(p => p.etapa !== 'activo' && p.etapa !== 'perdido').length;
-  const ICO_TARJ = { hoy: 'calendar', pend: 'clock', venc: 'alert', cump: 'check', meta: 'target', asig: 'chart', ing: 'coin', cap: 'bank', proy: 'folder', ali: 'users', chk: 'list', seg: 'funnel', pron: 'target', cob: 'check', evo: 'chart' };
+  const ICO_TARJ = { hoy: 'calendar', pend: 'clock', venc: 'alert', cump: 'check', meta: 'target', asig: 'chart', ing: 'coin', cap: 'bank', proy: 'folder', ali: 'users', chk: 'list', seg: 'funnel', pron: 'target', cob: 'check', evo: 'chart', rut: 'repeat' };
   const sinEmoji = t => String(t).replace(/^[^A-Za-zÁÉÍÓÚÑáéíóúñ]+/, '');
   const tarjeta = (clave, etiqueta, valor, sub, color, grande) => `
     <div class="stat-card dash-click" role="button" tabindex="0" onclick="dashAbrir('${clave}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();dashAbrir('${clave}')}">
@@ -2311,6 +2311,7 @@ function renderDashboard() {
     </div>`;
   const cards = [
     tarjeta('hoy', '📅 Tareas de hoy', paraHoy.length, overdue.length + ' vencidas · ' + hechasHoy.length + ' cumplidas hoy', 'var(--blue-600)'),
+    (() => { const rd = rtDelDia(hoyS), rh = rd.filter(r => rtHecha(r, hoyS)).length; return tarjeta('rut', '🔁 Rutinas de hoy', rd.length ? rh + '/' + rd.length : '—', rd.length ? (rh === rd.length ? '¡Todas marcadas!' : (rd.length - rh) + ' sin marcar') : (rtList().length ? 'Hoy no toca ninguna' : 'Crea tu primera rutina'), rd.length && rh === rd.length ? '#059669' : 'var(--blue-600)'); })(),
     tarjeta('pend', 'Tareas pendientes', all.filter(t=>!t.done).length, soon.length + ' por vencer esta semana', 'var(--orange)'),
     tarjeta('venc', '🔴 Tareas vencidas', overdue.length, overdue.length ? 'requieren atención' : 'todo al día', overdue.length ? 'var(--red)' : ''),
     tarjeta('cump', '✅ Tareas cumplidas', done.length, 'de ' + all.length + ' en total', 'var(--green)'),
@@ -2448,6 +2449,7 @@ function dashAbrir(clave) {
   const all = getAllTasks();
   const porFecha = (x, y) => (x.date || '9999').localeCompare(y.date || '9999');
   let titulo = '', cuerpo = '';
+  if (clave === 'rut') { calIrDia(embToday()); return; }
   if (clave === 'ali') { aliLista(); return; }
   if (clave === 'meta') { dashMeta(); return; }
   if (clave === 'proy') { dashProyectos(); return; }
