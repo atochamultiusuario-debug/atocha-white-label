@@ -981,6 +981,8 @@ body.visor-on { background: var(--gray-100); }
 .cal-det { margin-top:14px; } .cal-g { margin-top:14px; } .cal-gt { font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--gray-600); margin-bottom:6px; }
 @media (max-width:760px) { .cal-c { min-height:52px; padding:4px; } .cal-bub { min-width:18px; height:18px; font-size:11px; } .cal-rt { font-size:9.5px; }
   .cal-semana { grid-template-columns:1fr; } .cal-sd { min-height:0; } .cal-tira { gap:4px; } .cal-dia { padding:6px 1px; } .cal-dia b { font-size:15px; } .cal-p { font-size:9.5px; } }
+.tp-chip { display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; background:#EDE9FE; color:#5B21B6; border-radius:6px; padding:1px 6px; vertical-align:1px; }
+.tp-hora { font-size:12px; font-weight:700; color:var(--gray-600); }
 </style>
 <body>
 
@@ -1117,7 +1119,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 2-nov · Calendario y Rutinas</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Crear: rutina, gestión, trámite, actividad</div>
     </div>
   </nav>
 
@@ -1974,10 +1976,10 @@ function rtLinea(r, f) {
 }
 function rtBloqueHtml(f, titulo) {
   const l = rtDelDia(f), hec = l.filter(r => rtHecha(r, f)).length, pct = l.length ? Math.round(hec / l.length * 100) : 0;
-  if (!rtList().length) return `<div class="rt-cab"><b>🔁 ${titulo}</b><button type="button" class="edit-btn" onclick="rtForm('')">+ Crear rutina</button></div>
-    <div class="so-sub" style="margin-top:6px">Las rutinas son tareas cotidianas que se repiten, como revisar mensajes o cerrar el día. Las marcas ✓ quedan guardadas por día.</div>`;
+  if (!rtList().length) return `<div class="rt-cab"><b>🔁 ${titulo}</b><button type="button" class="edit-btn" onclick="rtForm('','rutina')">+ Crear</button></div>
+    <div class="so-sub" style="margin-top:6px">Crea rutinas (se repiten cada día) o algo de una sola vez: gestión, trámite o actividad. Las marcas ✓ quedan guardadas por día.</div>`;
   return `<div class="rt-cab"><b>🔁 ${titulo} <span class="rt-cuenta" title="${hec} de ${l.length} rutinas marcadas">${hec}/${l.length}</span></b>
-      <span><button type="button" class="edit-btn" onclick="rtForm('')">+ Rutina</button> <button type="button" class="edit-btn" onclick="goRutinas()">Ver todas</button></span></div>
+      <span><button type="button" class="edit-btn" onclick="rtForm('','rutina')">+ Crear</button> <button type="button" class="edit-btn" onclick="goRutinas()">Ver todas</button></span></div>
     <div class="rt-barra"><i style="width:${pct}%"></i></div>
     ${l.length ? l.map(r => rtLinea(r, f)).join('') : '<div class="emb-none" style="padding:8px 0">No tienes rutinas que toquen este día.</div>'}`;
 }
@@ -2012,10 +2014,11 @@ function calSemanaHtml() {
 }
 
 // ── Formulario de rutina ──
-function rtForm(id) {
+function rtForm(id, pestana) {
+  if (!id && pestana && pestana !== 'rutina') { evForm(pestana); return; }
   const r = id ? rtPor(id) : null, dias = r ? r.dias : [1, 2, 3, 4, 5];
   const tipo = dias.length === 7 ? 'todos' : (dias.slice().sort().join(',') === '1,2,3,4,5' ? 'lv' : 'dias');
-  setModal(`<h3>${r ? 'Editar rutina' : 'Nueva rutina'}</h3>
+  setModal(`${r ? '<h3>Editar rutina</h3>' : crTabs('rutina')}
     <div class="modal-field"><label>Nombre de la rutina</label><input type="text" id="rt-nombre" maxlength="120" value="${embAttr(r ? r.nombre : '')}" placeholder="Ej: Revisar mensajes y correos" autocomplete="off" onkeydown="if(event.key==='Enter')rtGuardar('${embAttr(id || '')}')"></div>
     <div class="modal-field"><label>Cada cuánto</label><select id="rt-tipo" onchange="rtTipo()"><option value="todos"${tipo === 'todos' ? ' selected' : ''}>Todos los días</option><option value="lv"${tipo === 'lv' ? ' selected' : ''}>De lunes a viernes</option><option value="dias"${tipo === 'dias' ? ' selected' : ''}>Elegir los días</option></select>
       <div class="rt-dias">${RT_ORD.map(d => `<label class="rt-d"><input type="checkbox" class="rt-dchk" value="${d}"${dias.indexOf(d) >= 0 ? ' checked' : ''}${tipo === 'dias' ? '' : ' disabled'}><span>${RT_C[d]}</span></label>`).join('')}</div></div>
@@ -2042,6 +2045,38 @@ function rtGuardar(id) {
     rtList().push(r);
   }
   saveLocal(); closeModal(); rtPintarBloques(); showToast('✅ Rutina ' + r.cod + ' guardada');
+}
+
+// ── Crear: Rutina (se repite) o algo de una sola vez: Gestión, Trámite, Actividad ──
+const CR_TIPOS = { rutina: 'Rutina', gestion: 'Gestión', tramite: 'Trámite', actividad: 'Actividad' };
+function crTabs(act) {
+  return `<h3>Crear</h3><div class="pt-tabs" style="margin:4px 0 12px">${Object.keys(CR_TIPOS).map(k => `<button type="button" class="pt-tab${k === act ? ' act' : ''}" onclick="crIr('${k}')">${CR_TIPOS[k]}</button>`).join('')}</div>
+    <div class="so-sub" style="margin:-4px 0 10px">${act === 'rutina' ? 'Se repite: la marcas cada día que toca.' : 'Una sola vez: tiene fecha y se cumple una vez. Aparece en Plan, Calendario y Listados.'}</div>`;
+}
+let crTmp = '';
+function crIr(k) { const e = document.getElementById('rt-nombre') || document.getElementById('ev-nombre'); crTmp = e ? e.value : ''; rtForm('', k); if (k === 'rutina') { const n = document.getElementById('rt-nombre'); if (n && crTmp) n.value = crTmp; } }
+function evForm(tipo) {
+  const f = (currentPage === 'calendario' && calTab === 'cal' && calDia) ? calDia : embToday();
+  setModal(`${crTabs(tipo)}
+    <div class="modal-field"><label>Nombre de la ${CR_TIPOS[tipo].toLowerCase()}</label><input type="text" id="ev-nombre" maxlength="300" value="${embAttr(crTmp)}" placeholder="${tipo === 'tramite' ? 'Ej: Renovar cámara de comercio' : tipo === 'gestion' ? 'Ej: Cotizar con proveedor' : 'Ej: Reunión con el aliado'}" autocomplete="off" onkeydown="if(event.key==='Enter')evGuardar('${tipo}')"></div>
+    <div class="modal-field" style="display:flex;gap:10px;flex-wrap:wrap"><div style="flex:1;min-width:140px"><label>Fecha</label><input type="date" id="ev-fecha" value="${f}"></div><div style="flex:1;min-width:120px"><label>Hora <span class="emb-hint">opcional</span></label><input type="time" id="ev-hora"></div></div>
+    <div class="modal-field"><label>Proyecto <span class="emb-hint">opcional</span></label><select id="ev-proy"><option value="">General (Checklist Maestro)</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}">${escHtml(modTxt(m))}</option>`).join('')}</select></div>
+    <div class="modal-field"><label>Importancia</label><select id="ev-imp"><option value="0">Sin clasificar</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}">${'★'.repeat(n)}</option>`).join('')}</select></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="evGuardar('${tipo}')">Crear ${CR_TIPOS[tipo].toLowerCase()}</button></div>`, 480);
+  crTmp = ''; const n = document.getElementById('ev-nombre'); if (n) n.focus();
+}
+function evGuardar(tipo) {
+  const name = document.getElementById('ev-nombre').value.trim().slice(0, 300), fecha = document.getElementById('ev-fecha').value, hora = document.getElementById('ev-hora').value;
+  if (!name) { showToast('⚠️ Escribe el nombre'); return; }
+  if (!fecha) { showToast('⚠️ Elige la fecha'); return; }
+  const imp = +document.getElementById('ev-imp').value, pid = document.getElementById('ev-proy').value;
+  const t = { name, date: fecha, priority: 'media', done: false, doneDate: null, tipo };
+  if (hora) t.hora = hora; if (imp) t.imp = imp;
+  if (pid) { const m = modPorId(pid); if (!m) return; m.tasks.push({ id: 't_' + Date.now(), ...t }); }
+  else state.checklist.push({ id: 'cl_' + Date.now(), ...t });
+  saveLocal(); closeModal(); renderSidebar(); showToast('✅ ' + CR_TIPOS[tipo] + ' creada para ' + formatDate(fecha));
+  calDia = fecha; calMes = fecha.slice(0, 7) + '-01';
+  if (currentPage === 'calendario' || currentPage === 'dashboard' || currentPage === 'plan') goPage(currentPage);
 }
 function rtArchivar(id) { const r = rtPor(id); if (!r) return; r.hasta = embToday(); saveLocal(); rtPintarBloques(); showToast('Rutina archivada: conserva su historial'); }
 function rtReactivar(id) { const r = rtPor(id); if (!r) return; delete r.hasta; saveLocal(); rtPintarBloques(); showToast('Rutina reactivada'); }
@@ -2070,8 +2105,8 @@ function rtTarjeta(r) {
 function rtPaginaHtml() {
   const act = rtList().filter(r => !r.hasta), arch = rtList().filter(r => r.hasta);
   return `<div class="card"><div class="so-cab"><div><div class="card-title" style="margin:0">Mis rutinas</div><div class="so-sub">Tareas cotidianas: se marcan cada día que tocan y la marca queda guardada por fecha.</div></div>
-      <div class="so-btns"><button type="button" class="btn-add" onclick="rtForm('')">+ Nueva rutina</button></div></div></div>
-    ${act.length ? act.map(rtTarjeta).join('') : '<div class="card"><div class="emb-none" style="padding:16px 4px">Aún no tienes rutinas. Crea la primera con "+ Nueva rutina".</div></div>'}
+      <div class="so-btns"><button type="button" class="btn-add" onclick="rtForm('','rutina')">+ Crear</button></div></div></div>
+    ${act.length ? act.map(rtTarjeta).join('') : '<div class="card"><div class="emb-none" style="padding:16px 4px">Aún no tienes rutinas. Crea la primera con "+ Crear".</div></div>'}
     ${arch.length ? `<details class="card"><summary><b>Archivadas</b> (${arch.length})</summary>${arch.map(rtTarjeta).join('')}</details>` : ''}`;
 }
 
@@ -2091,7 +2126,7 @@ function calAvanza(d) {
 function renderCalendario() {
   if (!calDia) calDia = embToday(); if (!calMes) calMes = calDia.slice(0, 7) + '-01';
   document.getElementById('page-content').innerHTML = `<div class="card cal-cab">
-    <div class="pt-tabs" style="margin:0"><button type="button" class="pt-tab${calTab === 'cal' ? ' act' : ''}" onclick="calSet('tab','cal')">Calendario</button><button type="button" class="pt-tab${calTab === 'rut' ? ' act' : ''}" onclick="calSet('tab','rut')">Rutinas</button></div>
+    <div class="pt-tabs" style="margin:0"><button type="button" class="pt-tab${calTab === 'cal' ? ' act' : ''}" onclick="calSet('tab','cal')">Calendario</button><button type="button" class="pt-tab${calTab === 'rut' ? ' act' : ''}" onclick="calSet('tab','rut')">Rutinas</button><button type="button" class="btn-add" style="margin-left:auto" onclick="rtForm('','rutina')">+ Crear</button></div>
     ${calTab === 'cal' ? `<div class="cal-ctl">
       <div class="cal-seg" title="Qué fecha mostrar"><span>Mostrar tareas que:</span>${Object.keys(CAL_MODOS).map(k => `<button type="button" class="${calModo === k ? 'on' : ''}" onclick="calSet('modo','${k}')">${CAL_MODOS[k]}</button>`).join('')}</div>
       <div class="cal-seg"><button type="button" class="${calVista === 'mes' ? 'on' : ''}" onclick="calSet('vista','mes')">Mes</button><button type="button" class="${calVista === 'sem' ? 'on' : ''}" onclick="calSet('vista','sem')">Semana</button></div></div>` : ''}</div>
@@ -2681,7 +2716,7 @@ function tkFila(ctx, t, n, hoy, o) {
   return `<div class="task-item dt-item${t.done ? ' dt-hecha' : ''}">
     <div class="dt-fila">
       <div class="dt-main"${nav}>
-        <div class="ti-name">${t.name}</div>
+        <div class="ti-name">${t.tipo && CR_TIPOS[t.tipo] ? `<span class="tp-chip">${CR_TIPOS[t.tipo]}</span> ` : ''}${t.hora ? `<span class="tp-hora">${escHtml(t.hora)}</span> ` : ''}${t.name}</div>
         <div class="ti-meta">${tkNumChip(t, ctx === 'ficha')}${o.sit ? sitChip(o.sit) + ' ' : ''}${o.sinOrigen ? (t.date ? (venc ? '<span style="color:var(--red);font-weight:700">' + formatDate(t.date) + ' (vencida)</span>' : formatDate(t.date)) : 'sin fecha') : meta}${o.prio && t.priority ? ' · <span class="task-priority p-' + t.priority + '">' + t.priority + '</span>' : ''}${o.sinOrigen && t.done && t.doneDate ? ' · ✅ ' + formatDate(t.doneDate) : ''}${o.sinOrigen ? repTag(t) : ''}</div>
       </div>
       <div class="dt-acts">
