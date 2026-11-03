@@ -949,6 +949,38 @@ body.visor-on { background: var(--gray-100); }
 .imp-s { background:none; border:none; padding:2px 1px; font-size:14px; line-height:1; color:#CBD5E1; cursor:pointer; font-family:inherit; }
 .imp-s.on { color:#F59E0B; } .imp:not(:hover) .imp-s:not(.on) { opacity:.6; } .imp-s:hover { transform:scale(1.25); }
 .imp-ro { color:#F59E0B; font-size:12px; letter-spacing:0; margin:0 6px 0 2px; white-space:nowrap; } .imp-ro i { font-style:normal; color:#CBD5E1; opacity:.7; }
+/* ── Rutinas y Calendario ── */
+.rt-cab { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+.rt-cuenta { background:var(--blue-600); color:#fff; border-radius:999px; padding:1px 9px; font-size:12px; margin-left:6px; vertical-align:1px; }
+.rt-barra { height:6px; background:var(--gray-200); border-radius:6px; overflow:hidden; margin:2px 0 8px; } .rt-barra i { display:block; height:100%; background:#10B981; transition:width .3s; }
+.rt-fila { display:flex; align-items:center; gap:10px; padding:8px 4px; border-top:1px solid var(--gray-100); cursor:pointer; font-size:14px; }
+.rt-fila input { width:20px; height:20px; flex:0 0 auto; cursor:pointer; accent-color:#10B981; } .rt-fila.ok .rt-n { text-decoration:line-through; color:var(--gray-400); }
+.rt-racha { font-size:11.5px; font-weight:700; color:#C2410C; background:#FFEDD5; border-radius:999px; padding:1px 7px; }
+.rt-card { margin-top:12px; } .rt-card.arch { opacity:.65; } .rt-top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; } .rt-nom { font-size:15px; }
+.rt-bts { display:flex; gap:4px; flex:0 0 auto; } .rt-stats { display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--gray-600); margin:6px 0; }
+.rt-q14 { display:flex; gap:3px; margin-top:6px; } .rt-q { width:16px; height:16px; border-radius:4px; background:var(--gray-200); display:inline-block; }
+.rt-q.ok { background:#10B981; } .rt-q.falta { background:#FCA5A5; } .rt-q.hoy { background:#fff; border:2px solid #10B981; box-sizing:border-box; } .rt-q.no { background:transparent; border:1px dashed var(--gray-200); box-sizing:border-box; }
+.rt-dias { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; } .rt-d { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:12px; cursor:pointer; } .rt-d input { width:18px; height:18px; }
+.cal-tira { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:12px; }
+.cal-dia { display:flex; flex-direction:column; align-items:center; gap:1px; padding:8px 2px; border:1px solid var(--gray-200); border-radius:10px; background:var(--gray-100); cursor:pointer; font-family:inherit; color:var(--gray-900); min-width:0; }
+.cal-dia small { font-size:10.5px; text-transform:uppercase; color:var(--gray-600); font-weight:700; } .cal-dia b { font-size:17px; } .cal-p { font-size:10.5px; color:var(--gray-600); } .cal-r { font-size:10.5px; color:#047857; font-weight:700; }
+.cal-dia.hoy { background:#DBEAFE; border-color:#2563EB; } .cal-dia.atr .cal-p { color:var(--red); font-weight:700; } .cal-dia:hover { border-color:var(--blue-500); }
+.cal-cab .cal-ctl { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+.cal-seg { display:flex; gap:4px; align-items:center; flex-wrap:wrap; } .cal-seg span { font-size:12px; color:var(--gray-600); margin-right:2px; }
+.cal-seg button { border:1px solid var(--gray-200); background:#fff; border-radius:999px; padding:5px 12px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; color:var(--gray-700); } .cal-seg button.on { background:var(--blue-600); border-color:var(--blue-600); color:#fff; }
+.cal-nav { display:flex; align-items:center; gap:8px; margin-bottom:10px; } .cal-nav b { flex:1; text-align:center; font-size:16px; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; } .cal-hd { display:contents; } .cal-hd span { text-align:center; font-size:11px; font-weight:700; color:var(--gray-600); text-transform:uppercase; padding:4px 0; }
+.cal-c { position:relative; min-height:66px; border:1px solid var(--gray-200); background:#fff; border-radius:8px; padding:5px 6px; cursor:pointer; text-align:left; font-family:inherit; display:flex; flex-direction:column; gap:3px; align-items:flex-start; color:var(--gray-900); }
+.cal-c.fuera { opacity:.45; } .cal-c.hoy { border-color:#2563EB; background:#EFF6FF; } .cal-c.sel { outline:2px solid #2563EB; outline-offset:0; } .cal-num { font-size:13px; font-weight:700; }
+.cal-bub { min-width:22px; height:22px; border-radius:999px; background:#DBEAFE; color:#1E40AF; font-size:12px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; box-sizing:border-box; }
+.cal-bub.crea { background:#E2E8F0; color:#334155; } .cal-bub.cump { background:#D1FAE5; color:#065F46; } .cal-bub.atr { background:#FEE2E2; color:#991B1B; }
+.cal-rt { font-size:10.5px; font-weight:700; color:#047857; } .cal-leyenda { font-size:12px; color:var(--gray-600); margin-top:10px; }
+.cal-semana { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; } .cal-sd { border:1px solid var(--gray-200); border-radius:10px; padding:8px; min-height:120px; cursor:pointer; background:#fff; min-width:0; }
+.cal-sd.hoy { background:#EFF6FF; border-color:#2563EB; } .cal-sd.sel { outline:2px solid #2563EB; } .cal-sh { display:flex; gap:6px; align-items:baseline; margin-bottom:4px; } .cal-sh small { font-size:11px; text-transform:uppercase; color:var(--gray-600); font-weight:700; }
+.cal-it { font-size:12px; padding:2px 0; border-top:1px solid var(--gray-100); overflow-wrap:anywhere; } .cal-it.ok { text-decoration:line-through; color:var(--gray-400); } .cal-vac { font-size:12px; color:var(--gray-400); }
+.cal-det { margin-top:14px; } .cal-g { margin-top:14px; } .cal-gt { font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--gray-600); margin-bottom:6px; }
+@media (max-width:760px) { .cal-c { min-height:52px; padding:4px; } .cal-bub { min-width:18px; height:18px; font-size:11px; } .cal-rt { font-size:9.5px; }
+  .cal-semana { grid-template-columns:1fr; } .cal-sd { min-height:0; } .cal-tira { gap:4px; } .cal-dia { padding:6px 1px; } .cal-dia b { font-size:15px; } .cal-p { font-size:9.5px; } }
 </style>
 <body>
 
@@ -1068,6 +1100,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-section">General</div>
       <div class="nav-item active" onclick="goPage('dashboard')" id="nav-dashboard"><span class="ni" data-i="target"></span><span class="nn">Dashboard</span></div>
       <div class="nav-item" onclick="goPage('plan')" id="nav-plan"><span class="ni" data-i="calendar"></span><span class="nn">Plan</span></div>
+      <div class="nav-item" onclick="goPage('calendario')" id="nav-calendario"><span class="ni" data-i="repeat"></span><span class="nn">Calendario</span></div>
       <div class="nav-item" onclick="goPage('embudo')" id="nav-embudo"><span class="ni" data-i="funnel"></span><span class="nn">Embudo</span></div>
       <div class="nav-item" onclick="goPage('listados')" id="nav-listados"><span class="ni" data-i="list"></span><span class="nn">Listados</span></div>
       <div class="nav-item" onclick="goPage('contactos')" id="nav-contactos"><span class="ni" data-i="users"></span><span class="nn">Contactos</span></div>
@@ -1084,7 +1117,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 2-nov · estrellas de importancia en las tareas</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 2-nov · Calendario y Rutinas</div>
     </div>
   </nav>
 
@@ -1887,6 +1920,246 @@ function closeSidebar() {
 //  NAVIGATION
 // ═══════════════════════════════════════════
 let currentPage = '';
+// ═══════════════════════════════════════════════════════════
+//  RUTINAS (tareas cotidianas) y CALENDARIO
+//  Una rutina no se termina: se marca cada día que toca (todos los días, de lunes a viernes o los días que elijas).
+//  Cada marca queda guardada por fecha. Un día sin marcar no es "vencido": solo queda en blanco.
+//  El Calendario muestra las tareas por la fecha en que vencen, en que se crearon o en que se cumplieron.
+// ═══════════════════════════════════════════════════════════
+const RT_N = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const RT_C = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const RT_ORD = [1, 2, 3, 4, 5, 6, 0];   // la semana empieza el lunes
+function rtList() { if (!Array.isArray(state.rutinas)) state.rutinas = []; return state.rutinas; }
+function rtPor(id) { return rtList().find(r => r.id === id) || null; }
+function calSuma(f, n) { const d = fechaLocal(f); d.setDate(d.getDate() + n); return fStr(d); }
+function rtAplica(r, f) { return (r.creada || '') <= f && (!r.hasta || f <= r.hasta) && (r.dias || []).indexOf(fechaLocal(f).getDay()) >= 0; }
+function rtDelDia(f) { return rtList().filter(r => rtAplica(r, f)); }
+function rtHecha(r, f) { return !!(r.hechas && r.hechas[f]); }
+function rtTexto(r) {
+  const d = (r.dias || []).slice().sort(), k = d.join(',');
+  if (d.length === 7) return 'Todos los días';
+  if (k === '1,2,3,4,5') return 'Lunes a viernes';
+  return RT_ORD.filter(x => d.indexOf(x) >= 0).map(x => RT_C[x]).join(' · ') || 'Sin días';
+}
+function rtSemana(r) {
+  const hoy = embToday(), lun = parteRango('s', hoy)[0]; let prog = 0, hec = 0;
+  for (let i = 0; i < 7; i++) { const f = calSuma(lun, i); if (f > hoy) break; if (rtAplica(r, f)) { prog++; if (rtHecha(r, f)) hec++; } }
+  return { prog, hec };
+}
+function rtRacha(r) {
+  const hoy = embToday(); let f = hoy, n = 0;
+  if (rtAplica(r, hoy) && !rtHecha(r, hoy)) f = calSuma(hoy, -1);
+  for (let i = 0; i < 400; i++) {
+    if ((r.creada || '') > f) break;
+    if (rtAplica(r, f)) { if (rtHecha(r, f)) n++; else break; }
+    f = calSuma(f, -1);
+  }
+  return n;
+}
+function rtMarcar(id, f) {
+  const r = rtPor(id); if (!r || f > embToday()) return;
+  if (!r.hechas) r.hechas = {};
+  if (r.hechas[f]) delete r.hechas[f]; else r.hechas[f] = 1;
+  saveLocal(); rtPintarBloques();
+}
+function rtPintarBloques() {
+  const d = document.getElementById('rt-dash'); if (d) d.innerHTML = rtDashInner();
+  const p = document.getElementById('rt-plan'); if (p) p.innerHTML = rtPlanInner();
+  if (currentPage === 'calendario') calPintar();
+}
+function rtLinea(r, f) {
+  const hecha = rtHecha(r, f), futuro = f > embToday(), m = r.moduleId ? modPorId(r.moduleId) : null, rc = rtRacha(r);
+  return `<label class="rt-fila${hecha ? ' ok' : ''}"><input type="checkbox"${hecha ? ' checked' : ''}${futuro ? ' disabled' : ''} onchange="rtMarcar('${embAttr(r.id)}','${f}')">
+    <span class="rt-n">${escHtml(r.nombre)}</span>${m ? ` <span class="mcod" title="${embAttr(m.name)}">${escHtml(m.cod || m.name)}</span>` : ''}${rc >= 2 ? ` <span class="rt-racha" title="Días seguidos cumplida">🔥${rc}</span>` : ''}</label>`;
+}
+function rtBloqueHtml(f, titulo) {
+  const l = rtDelDia(f), hec = l.filter(r => rtHecha(r, f)).length, pct = l.length ? Math.round(hec / l.length * 100) : 0;
+  if (!rtList().length) return `<div class="rt-cab"><b>🔁 ${titulo}</b><button type="button" class="edit-btn" onclick="rtForm('')">+ Crear rutina</button></div>
+    <div class="so-sub" style="margin-top:6px">Las rutinas son tareas cotidianas que se repiten, como revisar mensajes o cerrar el día. Las marcas ✓ quedan guardadas por día.</div>`;
+  return `<div class="rt-cab"><b>🔁 ${titulo} <span class="rt-cuenta" title="${hec} de ${l.length} rutinas marcadas">${hec}/${l.length}</span></b>
+      <span><button type="button" class="edit-btn" onclick="rtForm('')">+ Rutina</button> <button type="button" class="edit-btn" onclick="goRutinas()">Ver todas</button></span></div>
+    <div class="rt-barra"><i style="width:${pct}%"></i></div>
+    ${l.length ? l.map(r => rtLinea(r, f)).join('') : '<div class="emb-none" style="padding:8px 0">No tienes rutinas que toquen este día.</div>'}`;
+}
+function rtPlanInner() { return rtBloqueHtml(embToday(), 'Rutinas de hoy'); }
+function rtDashInner() { return rtBloqueHtml(embToday(), 'Rutinas de hoy') + calSemanaHtml(); }
+
+// ── Franja de la semana (Dashboard) ──
+function calConteos() {
+  const c = { venc: {}, pend: {}, crea: {}, cump: {} };
+  calTodas().forEach(t => {
+    if (t.date) { c.venc[t.date] = (c.venc[t.date] || 0) + 1; if (!t.done) c.pend[t.date] = (c.pend[t.date] || 0) + 1; }
+    if (t.creada) c.crea[t.creada] = (c.crea[t.creada] || 0) + 1;
+    if (t.done && t.doneDate) c.cump[t.doneDate] = (c.cump[t.doneDate] || 0) + 1;
+  });
+  return c;
+}
+function calTodas() {
+  const all = [];
+  state.modules.forEach(m => tkDeMod(m).forEach(t => all.push(t)));
+  state.checklist.forEach(t => all.push({ ...t, name: escHtml(t.name), projectName: 'Checklist Maestro', projectId: null }));
+  embList().forEach(p => tkDeEmb(p).forEach(t => all.push(t)));
+  return all;
+}
+function calSemanaHtml() {
+  const hoy = embToday(), lun = parteRango('s', hoy)[0], cn = calConteos();
+  return `<div class="cal-tira" title="Tu semana: tareas pendientes por día y rutinas">${[0, 1, 2, 3, 4, 5, 6].map(i => {
+    const f = calSuma(lun, i), p = cn.pend[f] || 0, rd = rtDelDia(f), rh = rd.filter(r => rtHecha(r, f)).length;
+    const atr = p && f < hoy;
+    return `<button type="button" class="cal-dia${f === hoy ? ' hoy' : ''}${atr ? ' atr' : ''}" onclick="calIrDia('${f}')">
+      <small>${RT_C[fechaLocal(f).getDay()]}</small><b>${fechaLocal(f).getDate()}</b>
+      <span class="cal-p">${p ? p + (p === 1 ? ' tarea' : ' tareas') : '—'}</span>${rd.length ? `<span class="cal-r">🔁 ${f > hoy ? rd.length : rh + '/' + rd.length}</span>` : ''}</button>`; }).join('')}</div>`;
+}
+
+// ── Formulario de rutina ──
+function rtForm(id) {
+  const r = id ? rtPor(id) : null, dias = r ? r.dias : [1, 2, 3, 4, 5];
+  const tipo = dias.length === 7 ? 'todos' : (dias.slice().sort().join(',') === '1,2,3,4,5' ? 'lv' : 'dias');
+  setModal(`<h3>${r ? 'Editar rutina' : 'Nueva rutina'}</h3>
+    <div class="modal-field"><label>Nombre de la rutina</label><input type="text" id="rt-nombre" maxlength="120" value="${embAttr(r ? r.nombre : '')}" placeholder="Ej: Revisar mensajes y correos" autocomplete="off" onkeydown="if(event.key==='Enter')rtGuardar('${embAttr(id || '')}')"></div>
+    <div class="modal-field"><label>Cada cuánto</label><select id="rt-tipo" onchange="rtTipo()"><option value="todos"${tipo === 'todos' ? ' selected' : ''}>Todos los días</option><option value="lv"${tipo === 'lv' ? ' selected' : ''}>De lunes a viernes</option><option value="dias"${tipo === 'dias' ? ' selected' : ''}>Elegir los días</option></select>
+      <div class="rt-dias">${RT_ORD.map(d => `<label class="rt-d"><input type="checkbox" class="rt-dchk" value="${d}"${dias.indexOf(d) >= 0 ? ' checked' : ''}${tipo === 'dias' ? '' : ' disabled'}><span>${RT_C[d]}</span></label>`).join('')}</div></div>
+    <div class="modal-field"><label>Proyecto <span class="emb-hint">opcional</span></label><select id="rt-proy"><option value="">General (sin proyecto)</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}"${r && r.moduleId === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}</select></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="rtGuardar('${embAttr(id || '')}')">${r ? 'Guardar' : 'Crear rutina'}</button></div>`, 480);
+  const n = document.getElementById('rt-nombre'); if (n) n.focus();
+}
+function rtTipo() {
+  const t = document.getElementById('rt-tipo').value;
+  document.querySelectorAll('.rt-dchk').forEach(c => { const d = +c.value; c.disabled = t !== 'dias'; if (t === 'todos') c.checked = true; else if (t === 'lv') c.checked = d >= 1 && d <= 5; });
+}
+function rtGuardar(id) {
+  const nombre = document.getElementById('rt-nombre').value.trim().slice(0, 120);
+  if (!nombre) { showToast('⚠️ Escribe el nombre de la rutina'); return; }
+  const dias = [...document.querySelectorAll('.rt-dchk')].filter(c => c.checked).map(c => +c.value);
+  if (!dias.length) { showToast('⚠️ Elige al menos un día'); return; }
+  const moduleId = document.getElementById('rt-proy').value;
+  let r = id ? rtPor(id) : null;
+  if (r) { r.nombre = nombre; r.dias = dias; r.moduleId = moduleId; }
+  else {
+    let mx = Number(state.rutinaSeq) || 0; rtList().forEach(x => { const q = /^R-(\d+)$/.exec(x.cod || ''); if (q) mx = Math.max(mx, +q[1]); });
+    state.rutinaSeq = mx + 1;
+    r = { id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5), cod: 'R-' + String(mx + 1).padStart(3, '0'), nombre, dias, moduleId, creada: embToday(), hechas: {} };
+    rtList().push(r);
+  }
+  saveLocal(); closeModal(); rtPintarBloques(); showToast('✅ Rutina ' + r.cod + ' guardada');
+}
+function rtArchivar(id) { const r = rtPor(id); if (!r) return; r.hasta = embToday(); saveLocal(); rtPintarBloques(); showToast('Rutina archivada: conserva su historial'); }
+function rtReactivar(id) { const r = rtPor(id); if (!r) return; delete r.hasta; saveLocal(); rtPintarBloques(); showToast('Rutina reactivada'); }
+function rtBorrar(id) {
+  const r = rtPor(id); if (!r) return;
+  if (!confirm('Se borrará la rutina "' + r.nombre + '" y todo su historial de marcas. ¿Continuar? (Si solo quieres dejar de hacerla, usa Archivar.)')) return;
+  state.rutinas = rtList().filter(x => x.id !== id); saveLocal(); rtPintarBloques();
+}
+
+// ── Página Rutinas ──
+function rtTarjeta(r) {
+  const hoy = embToday(), sem = rtSemana(r), rc = rtRacha(r), m = r.moduleId ? modPorId(r.moduleId) : null, act = !r.hasta;
+  let cuad = '';
+  for (let i = 13; i >= 0; i--) {
+    const f = calSuma(hoy, -i), ap = rtAplica(r, f), h = rtHecha(r, f);
+    cuad += `<i class="rt-q${!ap ? ' no' : h ? ' ok' : f === hoy ? ' hoy' : ' falta'}" title="${embAttr(formatDate(f) + (ap ? (h ? ' · hecha' : ' · sin marcar') : ' · no tocaba'))}"></i>`;
+  }
+  return `<div class="card rt-card${act ? '' : ' arch'}">
+    <div class="rt-top"><div><span class="tk-num">${escHtml(r.cod || '')}</span> <b class="rt-nom">${escHtml(r.nombre)}</b>${m ? ` <span class="mcod">${escHtml(m.cod || m.name)}</span>` : ''}</div>
+      <div class="rt-bts"><button type="button" class="dt-btn" title="Editar" onclick="rtForm('${embAttr(r.id)}')">✏️</button>${act ? `<button type="button" class="dt-btn" title="Archivar (conserva el historial)" onclick="rtArchivar('${embAttr(r.id)}')">📦</button>` : `<button type="button" class="dt-btn" title="Reactivar" onclick="rtReactivar('${embAttr(r.id)}')">↩</button>`}<button type="button" class="dt-btn dt-del" title="Borrar" onclick="rtBorrar('${embAttr(r.id)}')">🗑</button></div></div>
+    <div class="so-sub">${escHtml(rtTexto(r))} · creada ${formatDate(r.creada)}${r.hasta ? ' · archivada ' + formatDate(r.hasta) : ''}</div>
+    ${act ? `<div class="rt-stats"><span>Esta semana <b>${sem.hec} de ${sem.prog}</b></span><span>Racha <b>${rc} ${rc === 1 ? 'día' : 'días'}</b> 🔥</span></div>` : ''}
+    <div class="rt-q14" title="Últimos 14 días: verde = hecha, rojo claro = sin marcar">${cuad}</div>
+    ${act && rtAplica(r, hoy) ? `<div style="margin-top:8px">${rtLinea(r, hoy)}</div>` : ''}</div>`;
+}
+function rtPaginaHtml() {
+  const act = rtList().filter(r => !r.hasta), arch = rtList().filter(r => r.hasta);
+  return `<div class="card"><div class="so-cab"><div><div class="card-title" style="margin:0">Mis rutinas</div><div class="so-sub">Tareas cotidianas: se marcan cada día que tocan y la marca queda guardada por fecha.</div></div>
+      <div class="so-btns"><button type="button" class="btn-add" onclick="rtForm('')">+ Nueva rutina</button></div></div></div>
+    ${act.length ? act.map(rtTarjeta).join('') : '<div class="card"><div class="emb-none" style="padding:16px 4px">Aún no tienes rutinas. Crea la primera con "+ Nueva rutina".</div></div>'}
+    ${arch.length ? `<details class="card"><summary><b>Archivadas</b> (${arch.length})</summary>${arch.map(rtTarjeta).join('')}</details>` : ''}`;
+}
+
+// ── Página Calendario ──
+let calTab = 'cal', calModo = 'venc', calVista = 'mes', calDia = '', calMes = '';
+const CAL_MODOS = { venc: 'Vencen', crea: 'Creadas', cump: 'Cumplidas' };
+function calIrDia(f) { calDia = f; calMes = f.slice(0, 7) + '-01'; calTab = 'cal'; goPage('calendario'); }
+function goRutinas() { calTab = 'rut'; goPage('calendario'); }
+function calSet(k, v) { if (k === 'modo') calModo = v; else if (k === 'vista') calVista = v; else if (k === 'tab') calTab = v; renderCalendario(); }
+function calSel(f) { calDia = f; calMes = f.slice(0, 7) + '-01'; calPintar(); }
+function calHoy() { calDia = embToday(); calMes = calDia.slice(0, 7) + '-01'; calPintar(); }
+function calAvanza(d) {
+  if (calVista === 'sem') { calDia = calSuma(calDia, 7 * d); calMes = calDia.slice(0, 7) + '-01'; }
+  else { const m = fechaLocal(calMes); m.setMonth(m.getMonth() + d, 1); calMes = fStr(m); if (calDia.slice(0, 7) !== calMes.slice(0, 7)) calDia = calMes; }
+  calPintar();
+}
+function renderCalendario() {
+  if (!calDia) calDia = embToday(); if (!calMes) calMes = calDia.slice(0, 7) + '-01';
+  document.getElementById('page-content').innerHTML = `<div class="card cal-cab">
+    <div class="pt-tabs" style="margin:0"><button type="button" class="pt-tab${calTab === 'cal' ? ' act' : ''}" onclick="calSet('tab','cal')">Calendario</button><button type="button" class="pt-tab${calTab === 'rut' ? ' act' : ''}" onclick="calSet('tab','rut')">Rutinas</button></div>
+    ${calTab === 'cal' ? `<div class="cal-ctl">
+      <div class="cal-seg" title="Qué fecha mostrar"><span>Mostrar tareas que:</span>${Object.keys(CAL_MODOS).map(k => `<button type="button" class="${calModo === k ? 'on' : ''}" onclick="calSet('modo','${k}')">${CAL_MODOS[k]}</button>`).join('')}</div>
+      <div class="cal-seg"><button type="button" class="${calVista === 'mes' ? 'on' : ''}" onclick="calSet('vista','mes')">Mes</button><button type="button" class="${calVista === 'sem' ? 'on' : ''}" onclick="calSet('vista','sem')">Semana</button></div></div>` : ''}</div>
+    <div id="cal-body"></div>`;
+  calPintar();
+}
+function calPintar() {
+  const b = document.getElementById('cal-body'); if (!b) return;
+  b.innerHTML = calTab === 'rut' ? rtPaginaHtml() : calVistaHtml() + calDetalleHtml(calDia);
+}
+function calGrupo(modo, t, f) { return modo === 'venc' ? t.date === f : modo === 'crea' ? t.creada === f : (t.done && t.doneDate === f); }
+function calVistaHtml() {
+  const hoy = embToday(), todas = calTodas(), cn = calConteos();
+  const nav = (tit) => `<div class="cal-nav"><button type="button" class="edit-btn" onclick="calAvanza(-1)" aria-label="Anterior">‹</button><b>${tit}</b><button type="button" class="edit-btn" onclick="calAvanza(1)" aria-label="Siguiente">›</button><button type="button" class="edit-btn" onclick="calHoy()">Hoy</button></div>`;
+  const celda = (f, fuera) => {
+    const n = calModo === 'venc' ? (cn.venc[f] || 0) : calModo === 'crea' ? (cn.crea[f] || 0) : (cn.cump[f] || 0);
+    const atr = calModo === 'venc' && (cn.pend[f] || 0) && f < hoy, rd = rtDelDia(f), rh = rd.filter(r => rtHecha(r, f)).length;
+    return `<button type="button" class="cal-c${fuera ? ' fuera' : ''}${f === hoy ? ' hoy' : ''}${f === calDia ? ' sel' : ''}" onclick="calSel('${f}')"><span class="cal-num">${fechaLocal(f).getDate()}</span>
+      ${n ? `<span class="cal-bub ${calModo}${atr ? ' atr' : ''}">${n}</span>` : ''}${rd.length ? `<span class="cal-rt">🔁${f > hoy ? rd.length : rh + '/' + rd.length}</span>` : ''}</button>`;
+  };
+  if (calVista === 'sem') {
+    const lun = parteRango('s', calDia)[0];
+    return `<div class="card">${nav('Semana del ' + formatDate(lun))}<div class="cal-semana">${[0, 1, 2, 3, 4, 5, 6].map(i => {
+      const f = calSuma(lun, i), l = todas.filter(t => calGrupo(calModo, t, f)), rd = rtDelDia(f);
+      return `<div class="cal-sd${f === hoy ? ' hoy' : ''}${f === calDia ? ' sel' : ''}" onclick="calSel('${f}')"><div class="cal-sh"><small>${RT_C[fechaLocal(f).getDay()]}</small><b>${fechaLocal(f).getDate()}</b></div>
+        ${rd.length ? `<div class="cal-rt">🔁 ${rd.filter(r => rtHecha(r, f)).length}/${rd.length}</div>` : ''}
+        ${l.slice(0, 6).map(t => `<div class="cal-it${t.done ? ' ok' : ''}">${t.num ? escHtml(t.num.slice(-5)) + ' ' : ''}${t.name}</div>`).join('') || '<div class="cal-vac">—</div>'}${l.length > 6 ? `<div class="cal-vac">+${l.length - 6} más</div>` : ''}</div>`; }).join('')}</div></div>`;
+  }
+  const p = fechaLocal(calMes), prim = new Date(p.getFullYear(), p.getMonth(), 1), ult = new Date(p.getFullYear(), p.getMonth() + 1, 0);
+  const ini = new Date(prim); ini.setDate(1 - ((prim.getDay() + 6) % 7));
+  const filas = Math.ceil(((prim.getDay() + 6) % 7 + ult.getDate()) / 7);
+  let celdas = '';
+  for (let i = 0; i < filas * 7; i++) { const d = new Date(ini); d.setDate(ini.getDate() + i); celdas += celda(fStr(d), d.getMonth() !== p.getMonth()); }
+  const mes = p.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+  return `<div class="card">${nav(mes.charAt(0).toUpperCase() + mes.slice(1))}<div class="cal-grid"><div class="cal-hd">${[1, 2, 3, 4, 5, 6, 0].map(d => `<span>${RT_C[d]}</span>`).join('')}</div>${celdas}</div>
+    <div class="cal-leyenda">${calModo === 'venc' ? 'El número es la cantidad de tareas que vencen ese día (rojo: hay pendientes vencidas).' : calModo === 'crea' ? 'El número es la cantidad de tareas que se crearon ese día.' : 'El número es la cantidad de tareas que se cumplieron ese día.'} 🔁 = rutinas del día.</div></div>`;
+}
+function calDetalleHtml(f) {
+  const hoy = embToday(), hoyD = hoyLocal(), todas = calTodas();
+  const grupos = { venc: todas.filter(t => t.date === f).sort((a, b) => (a.done - b.done)), crea: todas.filter(t => t.creada === f), cump: todas.filter(t => t.done && t.doneDate === f) };
+  const orden = [calModo].concat(Object.keys(CAL_MODOS).filter(k => k !== calModo));
+  const items = [].concat(...orden.map(k => grupos[k]));
+  tkRegistrar('cal', items, calPintar);
+  let off = 0;
+  const bloque = k => { const l = grupos[k], h = `<div class="cal-g"><div class="cal-gt">${{ venc: 'Vencen este día', crea: 'Creadas este día', cump: 'Cumplidas este día' }[k]} <span class="plan-n">${l.length}</span></div>${l.length ? l.map((t, i) => tkFila('cal', t, off + i, hoyD, { nav: false, prio: true })).join('') : '<div class="cal-vac" style="padding:4px 0">Ninguna.</div>'}</div>`; off += l.length; return h; };
+  const rd = rtDelDia(f);
+  const nov = []; embList().forEach(p => (p.bitacora || []).forEach(x => { if (isoALocal(x.fecha) === f) nov.push({ p, x }); }));
+  const sop = soList().filter(s => s.fecha === f);
+  const fechaTxt = fechaLocal(f).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return `<div class="card cal-det"><div class="card-title" style="text-transform:capitalize">${escHtml(fechaTxt)}${f === hoy ? ' <span class="cp-chip">hoy</span>' : ''}</div>
+    <div class="task-form"><input type="text" id="cal-nt" placeholder="Nueva tarea con vencimiento este día…" maxlength="300" autocomplete="off" onkeydown="if(event.key==='Enter')calNuevaTarea()">
+      <select id="cal-np"><option value="">General (Checklist Maestro)</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}">${escHtml(modTxt(m))}</option>`).join('')}</select>
+      <button type="button" class="btn-add" onclick="calNuevaTarea()">+ Agregar</button></div>
+    ${rd.length ? `<div class="cal-g"><div class="cal-gt">Rutinas de este día <span class="plan-n">${rd.filter(r => rtHecha(r, f)).length}/${rd.length}</span></div>${rd.map(r => rtLinea(r, f)).join('')}${f > hoy ? '<div class="cal-vac">Las rutinas se marcan el día que toca.</div>' : ''}</div>` : ''}
+    ${orden.map(bloque).join('')}
+    ${nov.length ? `<div class="cal-g"><div class="cal-gt">Novedades del Embudo <span class="plan-n">${nov.length}</span></div>${nov.slice(0, 20).map(({ p, x }) => `<div class="cpv-nov"><small>${x.contacto ? '📞 Contacto · ' : ''}${escHtml(embFechaHora(x.fecha))} · <b>${escHtml(p.nombre)}</b></small>${escHtml(x.texto)}</div>`).join('')}</div>` : ''}
+    ${sop.length ? `<div class="cal-g"><div class="cal-gt">Soportes de este día <span class="plan-n">${sop.length}</span></div>${sop.map(s => { const u = embUrlSegura(s.url); return `<div class="cpv-ct"><span class="tk-num">${escHtml(soCodigo(s))}</span> ${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.titulo)}</b></a>` : `<b>${escHtml(s.titulo)}</b>`} <span class="cpv-sub">${escHtml(s.tipo || '')}</span></div>`; }).join('')}</div>` : ''}</div>`;
+}
+function calNuevaTarea() {
+  const n = document.getElementById('cal-nt'), pr = document.getElementById('cal-np'), name = n.value.trim();
+  if (!name) { showToast('Escribe la tarea'); n.focus(); return; }
+  const base = { name, date: calDia, priority: 'media', done: false, doneDate: null };
+  if (pr.value) { const m = modPorId(pr.value); if (!m) return; m.tasks.push({ id: 't_' + Date.now(), ...base }); }
+  else state.checklist.push({ id: 'cl_' + Date.now(), ...base });
+  saveLocal(); renderSidebar(); calPintar();
+  const e = document.getElementById('cal-nt'); if (e) e.focus();
+}
+
 function goPage(page) {
   currentPage = page;
   closeSidebar();
@@ -1907,6 +2180,7 @@ function goPage(page) {
   else if (page === 'notas') renderNotas();
   else if (page === 'soportes') renderSoportes();
   else if (page === 'plan') renderPlan();
+  else if (page === 'calendario') renderCalendario();
   else if (page === 'listados') renderListados();
   else if (page === 'contactos') renderContactos();
   else if (page === 'embudo') renderEmbudo();
@@ -1925,6 +2199,7 @@ function getPageTitle(page) {
   if (page === 'notas') return 'Notas';
   if (page === 'soportes') return 'Soportes';
   if (page === 'plan') return 'Plan';
+  if (page === 'calendario') return 'Calendario';
   if (page === 'listados') return 'Listados';
   if (page === 'contactos') return 'Contactos';
   if (page === 'embudo') return 'Embudo de prospectos';
@@ -1955,7 +2230,7 @@ function getAllTasks() {
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
   embList().forEach(p => (p.actividades || []).forEach(a => all.push({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0,
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0, creada: a.creada || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   })));
   return all;
@@ -2031,6 +2306,7 @@ function renderDashboard() {
     <button type="button" class="dash-flecha" id="dash-der" onclick="dashDesliza(1)" aria-label="Bloque siguiente">›</button>
   </div>`;
 
+  html += `<div class="card" id="rt-dash" style="margin-top:14px">${rtDashInner()}</div>`;
   // Modules grid
   html += `<div class="section-header">
     <div class="section-title">Módulos del Ecosistema</div>
@@ -2363,7 +2639,7 @@ function isoALocal(iso) {
 function tkDeEmb(p) {
   return (p.actividades || []).map(a => ({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0,
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0, creada: a.creada || '',
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   }));
 }
@@ -7125,6 +7401,7 @@ function renderPlan() {
     <div class="so-btns"><button type="button" class="btn-add" onclick="parteAbrir('d')">Parte del día</button>
       <button type="button" class="edit-btn" onclick="parteAbrir('s')">Parte semanal</button><button type="button" class="edit-btn" onclick="parteAbrir('m')">Parte mensual</button><button type="button" class="edit-btn" onclick="guiaRutina()">📖 Guía de rutina</button></div>
   </div>
+  <div class="card" id="rt-plan">${rtPlanInner()}</div>
   ${venc ? `<div class="plan-alerta">⚠️ ${venc} ${venc === 1 ? 'tarea vencida' : 'tareas vencidas'}: cúmplela, reprográmala o elimínala. Nada debe quedar sin resolver al cerrar el día.</div>` : ''}
   ${rep3 ? `<div class="plan-alerta amb">↻ ${rep3} ${rep3 === 1 ? 'tarea lleva' : 'tareas llevan'} 3 o más reprogramaciones: hazla ya, divídela o elimínala.</div>` : ''}
   <div class="plan-grid">
