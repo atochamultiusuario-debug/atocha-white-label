@@ -2081,7 +2081,7 @@ const CAL_MODOS = { venc: 'Vencen', crea: 'Creadas', cump: 'Cumplidas' };
 function calIrDia(f) { calDia = f; calMes = f.slice(0, 7) + '-01'; calTab = 'cal'; goPage('calendario'); }
 function goRutinas() { calTab = 'rut'; goPage('calendario'); }
 function calSet(k, v) { if (k === 'modo') calModo = v; else if (k === 'vista') calVista = v; else if (k === 'tab') calTab = v; renderCalendario(); }
-function calSel(f) { calDia = f; calMes = f.slice(0, 7) + '-01'; calPintar(); }
+function calSel(f) { calDia = f; calMes = f.slice(0, 7) + '-01'; calPintar(); const d = document.querySelector('.cal-det'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 function calHoy() { calDia = embToday(); calMes = calDia.slice(0, 7) + '-01'; calPintar(); }
 function calAvanza(d) {
   if (calVista === 'sem') { calDia = calSuma(calDia, 7 * d); calMes = calDia.slice(0, 7) + '-01'; }
