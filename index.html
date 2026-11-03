@@ -945,6 +945,10 @@ body.visor-on { background: var(--gray-100); }
 .mc-sit { margin-top:2px; text-align:right; line-height:1.9; } .mc-sit .prg { margin:0; } .mc-sit .sit { margin-left:4px; }
 .emb-prgrow { margin:-2px 0 2px; } .mp-pg { margin:3px 0 1px; } .mp-card .prg, .emb-card .prg, .cpv-card .prg { margin:0 4px 0 0; }
 .mp-ct .prg, .cpv-card .mp-ct .prg { margin-right:4px; }
+.imp { display:inline-flex; align-items:center; margin:0 6px 0 2px; vertical-align:middle; }
+.imp-s { background:none; border:none; padding:2px 1px; font-size:14px; line-height:1; color:#CBD5E1; cursor:pointer; font-family:inherit; }
+.imp-s.on { color:#F59E0B; } .imp:not(:hover) .imp-s:not(.on) { opacity:.6; } .imp-s:hover { transform:scale(1.25); }
+.imp-ro { color:#F59E0B; font-size:12px; letter-spacing:0; margin:0 6px 0 2px; white-space:nowrap; } .imp-ro i { font-style:normal; color:#CBD5E1; opacity:.7; }
 </style>
 <body>
 
@@ -1080,7 +1084,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 1-nov · PROGRESS en cada prospecto</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 2-nov · estrellas de importancia en las tareas</div>
     </div>
   </nav>
 
@@ -1269,7 +1273,7 @@ function sitGuardar(modId) {
   saveLocal(); closeModal(); renderSidebar(); goPage(currentPage);
   showToast('✅ ' + SIT_T[s] + ' · ' + PROG_T[g]);
 }
-let lsTab = 'p', lsF = { proy: '', est: '', q: '', sit: '' };
+let lsTab = 'p', lsF = { proy: '', est: '', q: '', sit: '', imp: '' };
 const LS_EST_T = { pendiente: 'Pendiente', vencida: 'Vencida', cumplida: 'Cumplida' };
 function lsFecha(f) { return f ? formatDate(f) : '—'; }
 function lsProyectos() {
@@ -1287,19 +1291,23 @@ function lsTareas() {
   const filas = tkTodas().map(x => {
     const m = x.kind === 'mod' ? x.dueno : (x.kind === 'emb' ? modPorId(x.dueno.moduleId) : null);
     return { x, id: x.o.id, num: x.o.num || '', m, proyTxt: m ? modTxt(m) : (x.kind === 'emb' ? 'Embudo · ' + x.dueno.nombre : 'Checklist Maestro'),
-      nombre: tkX.nombre(x) || '', creada: x.o.creada || '', fecha: tkX.fecha(x) || '', est: lsEstadoTarea(x) };
+      nombre: tkX.nombre(x) || '', creada: x.o.creada || '', fecha: tkX.fecha(x) || '', est: lsEstadoTarea(x), imp: impN(x.o) };
   });
   return filas.sort((a, b) => (a.m ? modNum(a.m) : 2e9) - (b.m ? modNum(b.m) : 2e9) || String(a.num).localeCompare(String(b.num)));
 }
 function lsFiltrar(l, esT) {
   const q = normTxt(lsF.q);
-  return l.filter(r => {
+  const out = l.filter(r => {
     if (lsF.proy && (esT ? (lsF.proy === '__none' ? !!r.m : !r.m || r.m.id !== lsF.proy) : r.m.id !== lsF.proy)) return false;
     if (lsF.est && (esT ? r.est !== lsF.est : r.st.key !== lsF.est)) return false;
     if (lsF.sit && (esT ? (!r.m || sitDe(r.m) !== lsF.sit) : sitDe(r.m) !== lsF.sit)) return false;
+    if (esT && lsF.imp === 'sin' && r.imp) return false;
+    if (esT && /^[345]$/.test(lsF.imp) && r.imp < +lsF.imp) return false;
     if (q && normTxt((esT ? [r.num, r.proyTxt, r.nombre, r.m ? SIT_T[sitDe(r.m)] : ''] : [r.cod, r.nombre, r.st.label, SIT_T[sitDe(r.m)], PROG_T[progDe(r.m)], r.m.causa || '']).join(' ')).indexOf(q) < 0) return false;
     return true;
   });
+  if (esT && lsF.imp === 'orden') out.sort((a, b) => b.imp - a.imp);
+  return out;
 }
 function lsTabla() {
   if (lsTab === 'p') {
@@ -1315,7 +1323,7 @@ function lsTabla() {
   const l = lsFiltrar(lsTareas(), true);
   if (!l.length) return '<div class="emb-none" style="padding:18px 4px">Ninguna tarea coincide.</div>';
   return `<div class="so-scroll"><table class="so-tabla ls-tabla"><thead><tr><th>N° tarea</th><th>Proyecto</th><th>Tarea</th><th>Status</th><th>Creación</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>${l.map(r => `<tr${r.m && !sitActivo(r.m) ? ' class="ls-inact"' : ''}>
-    <td>${r.num ? `<button type="button" class="tk-num ls-num" onclick="tkHoja('${embAttr(r.id)}')" title="Abrir la tarea">${escHtml(r.num)}</button>${r.x.o.notas ? `<button type="button" class="tk-nota" onclick="tkHoja('${embAttr(r.id)}')" title="Tiene una nota guardada: ábrela">📝</button>` : ''}` : '—'}</td>
+    <td>${r.num ? `<button type="button" class="tk-num ls-num" onclick="tkHoja('${embAttr(r.id)}')" title="Abrir la tarea">${escHtml(r.num)}</button>${impHtml({ id: r.id, imp: r.imp })}${r.x.o.notas ? `<button type="button" class="tk-nota" onclick="tkHoja('${embAttr(r.id)}')" title="Tiene una nota guardada: ábrela">📝</button>` : ''}` : '—'}</td>
     <td>${r.m && r.m.cod ? `<button type="button" class="mcod ls-pl" onclick="goPage('mod_${embAttr(r.m.id)}')" title="${embAttr(r.proyTxt)}">${escHtml(r.m.cod)}</button>` : ''}<span class="ls-pn">${escHtml(r.m ? r.m.name : r.proyTxt)}</span></td>
     <td class="ls-nom" title="${embAttr(r.nombre)}">${escHtml(r.nombre)}</td>
     <td>${r.m ? `<span title="${embAttr(r.m.causa || '')}">${sitChip(r.m)}</span>` : '—'}</td><td>${lsFecha(r.creada)}</td>
@@ -1331,18 +1339,19 @@ function renderListados() {
     <div class="so-filtros">
       <input type="text" id="ls-q" placeholder="Buscar…" value="${embAttr(lsF.q)}" oninput="lsF.q=this.value;lsPintar()">
       ${lsTab === 't' ? `<select onchange="lsF.proy=this.value;lsPintar()"><option value="">Todos los proyectos</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}"${lsF.proy === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}<option value="__none"${lsF.proy === '__none' ? ' selected' : ''}>Sin proyecto</option></select>` : ''}
+      ${lsTab === 't' ? `<select onchange="lsF.imp=this.value;lsPintar()" title="Importancia"><option value="">★ Importancia: todas</option><option value="orden"${lsF.imp === 'orden' ? ' selected' : ''}>Más importantes primero</option><option value="5"${lsF.imp === '5' ? ' selected' : ''}>5 estrellas</option><option value="4"${lsF.imp === '4' ? ' selected' : ''}>4 o más</option><option value="3"${lsF.imp === '3' ? ' selected' : ''}>3 o más</option><option value="sin"${lsF.imp === 'sin' ? ' selected' : ''}>Sin clasificar</option></select>` : ''}
       ${true ? `<select onchange="lsF.sit=this.value;lsPintar()"><option value="">All status</option>${Object.keys(SIT_T).map(k => `<option value="${k}"${lsF.sit === k ? ' selected' : ''}>${SIT_T[k]}</option>`).join('')}</select>` : ''}
       <select onchange="lsF.est=this.value;lsPintar()"><option value="">${lsTab === 'p' ? 'All phases' : 'Todos los estados'}</option>${optE.map(([k, n]) => `<option value="${k}"${lsF.est === k ? ' selected' : ''}>${escHtml(n)}</option>`).join('')}</select>
     </div><div id="ls-lista"></div></div>`;
   lsPintar();
 }
 function lsPintar() { const e = document.getElementById('ls-lista'); if (e) e.innerHTML = lsTabla(); }
-function lsCambiar(t) { lsTab = t; lsF = { proy: '', est: '', q: '', sit: '' }; renderListados(); }
+function lsCambiar(t) { lsTab = t; lsF = { proy: '', est: '', q: '', sit: '', imp: '' }; renderListados(); }
 function lsDatos() {
   if (lsTab === 'p') return { cab: ['N° proyecto', 'Nombre', 'Creación', 'Phase', 'Status', 'Causa', 'Progress', 'Tareas cumplidas', 'Tareas totales', 'Vencidas'],
     filas: lsFiltrar(lsProyectos(), false).map(r => [r.cod, r.nombre, r.creada, r.st.label, SIT_T[sitDe(r.m)], r.m.causa || '', PROG_T[progDe(r.m)], r.hechas, r.total, r.venc]), titulo: 'Listado de proyectos', arch: 'proyectos' };
-  return { cab: ['N° tarea', 'N° proyecto', 'Proyecto', 'Tarea', 'Status', 'Creación', 'Vencimiento', 'Estado'],
-    filas: lsFiltrar(lsTareas(), true).map(r => [r.num, r.m ? r.m.cod || '' : '', r.m ? r.m.name : r.proyTxt, r.nombre, r.m ? SIT_T[sitDe(r.m)] : '', r.creada, r.fecha, LS_EST_T[r.est]]), titulo: 'Listado de tareas', arch: 'tareas' };
+  return { cab: ['N° tarea', 'N° proyecto', 'Proyecto', 'Tarea', 'Status', 'Creación', 'Vencimiento', 'Estado', 'Importancia (1-5)'],
+    filas: lsFiltrar(lsTareas(), true).map(r => [r.num, r.m ? r.m.cod || '' : '', r.m ? r.m.name : r.proyTxt, r.nombre, r.m ? SIT_T[sitDe(r.m)] : '', r.creada, r.fecha, LS_EST_T[r.est], r.imp || '']), titulo: 'Listado de tareas', arch: 'tareas' };
 }
 function lsCsv() {
   const d = lsDatos(); if (!d.filas.length) { showToast('No hay filas para descargar'); return; }
@@ -1946,7 +1955,7 @@ function getAllTasks() {
   // pero viven dentro de cada prospecto. Los textos se escapan porque estas listas usan HTML.
   embList().forEach(p => (p.actividades || []).forEach(a => all.push({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [],
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0,
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   })));
   return all;
@@ -2354,7 +2363,7 @@ function isoALocal(iso) {
 function tkDeEmb(p) {
   return (p.actividades || []).map(a => ({
     id: a.id, name: escHtml(a.texto), date: a.fecha || '', priority: 'media',
-    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [],
+    done: !!a.hecha, doneDate: a.fechaHecha || null, repite: a.repite || '', num: a.num || '', reprog: a.reprog || 0, notas: a.notas || '', notasMas: a.notasMas || [], imp: a.imp || 0,
     projectName: escHtml('Embudo · ' + p.nombre), projectId: 'emb:' + p.id
   }));
 }
@@ -5286,13 +5295,13 @@ function cpPayload(m) {
       e: fin ? 0 : Math.round(mens * embProb(p.etapa, p.moduleId) / 100), dias: embDiasSinNovedad(p), niv: al.nivel,
       ct: p.contacto || '', tel: p.telefono || '', em: p.email || '', ci: p.ciudad || '', rs: p.responsable || '', d: p.desde || '',
       no: p.notas || '', mo: p.etapa === 'perdido' ? (p.motivoPerdido || '') : '',
-      ac: (p.actividades || []).map(a => ({ t: a.texto || '', f: a.fecha || '', h: a.hecha ? 1 : 0, fh: a.fechaHecha || '' })),
+      ac: (p.actividades || []).map(a => ({ t: a.texto || '', f: a.fecha || '', h: a.hecha ? 1 : 0, fh: a.fechaHecha || '', c: a.num || '', i: impN(a) })),
       bi: (p.bitacora || []).map(b => ({ f: b.fecha || '', t: b.texto || '', c: b.contacto ? 1 : 0 })),
       en: (p.enlaces || []).map(x => ({ n: x.nombre || '', u: x.url || '' })) };
   });
   return { v: 1, emp: state.company || '', proy: { cod: m.cod || '', nombre: m.name || '', sit: sitDe(m), prog: progDe(m), causa: m.causa || '' },
     cols: cols.map(c => ({ id: c.id, name: c.name, color: c.color })), pros,
-    tareas: (m.tasks || []).map(t => ({ n: t.name || '', f: t.date || '', h: t.done ? 1 : 0 })),
+    tareas: (m.tasks || []).map(t => ({ n: t.name || '', f: t.date || '', h: t.done ? 1 : 0, c: t.num || '', i: impN(t) })),
     con: ctList().filter(c => (c.proyectos || []).indexOf(m.id) >= 0).map(c => ({ cod: c.cod || '', n: c.nombre || '', t: CT_TIPOS[c.tipo] || '', em: c.empresa || '', ca: c.cargo || '', tel: c.telefono || '', ema: c.email || '', ci: c.ciudad || '', no: c.notas || '' })),
     docs: soList().filter(s => s.moduleId === m.id).sort((a, b) => b.n - a.n).map(s => ({ cod: soCodigo(s), t: s.titulo || '', k: s.tipo || '', f: s.fecha || '', u: s.url || '', e: s.empresa || '' })) };
 }
@@ -5466,7 +5475,7 @@ function cpVisorRender() {
     ${(d.docs || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentos del proyecto (${d.docs.length})</div>${d.docs.map(s => { const u = embUrlSegura(s.u); return `<div class="cpv-ct">
         <div><span class="tk-num">${escHtml(s.cod)}</span>${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.t)}</b></a>` : `<b>${escHtml(s.t)}</b>`}</div>
         <div class="cpv-sub">${escHtml([s.k, cpF(s.f), s.e].filter(Boolean).join(' · '))}</div></div>`; }).join('')}<div class="cpv-sub" style="margin-top:8px">Los documentos se abren en Google Drive: si te pide permiso, solicítalo a quien te compartió este enlace.</div></div>` : ''}
-    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto${d.proy.sit && SIT_T[d.proy.sit] ? ` <span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span>` : ''}</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${escHtml(t.n)}</span><em>${d.proy.sit && SIT_T[d.proy.sit] ? `<span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span> ` : ''}${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
+    ${tareas.length ? `<div class="card" style="margin-top:16px"><div class="card-title">Tareas del proyecto${d.proy.sit && SIT_T[d.proy.sit] ? ` <span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span>` : ''}</div>${tareas.map(t => `<div class="cpv-li${t.h ? ' hecha' : ''}"><span>${t.h ? '✅ ' : '⬜ '}${t.c ? `<span class="tk-num">${escHtml(t.c)}</span>${impSolo(t.i)}` : impSolo(t.i)}${escHtml(t.n)}</span><em>${d.proy.sit && SIT_T[d.proy.sit] ? `<span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit])}</span> ` : ''}${escHtml(cpF(t.f))}</em></div>`).join('')}</div>` : ''}
     <div id="cpv-ov-slot"></div>`;
   const tr = document.getElementById('cpv-track');
   if (tr) { cpvCab(); requestAnimationFrame(() => { tr.scrollLeft = cpvIdx * tr.clientWidth; }); }
@@ -5500,7 +5509,7 @@ function cpFicha(id) {
   const c = (cpD.cols || []).find(x => x.id === p.c) || { name: '', color: '#64748B' };
   const wa = embWa(p.tel), row = (k, h) => h ? `<dt>${k}</dt><dd>${h}</dd>` : '';
   const pend = (p.ac || []).filter(a => !a.h).sort((a, b) => ((a.f || '9999') < (b.f || '9999') ? -1 : 1)), hechas = (p.ac || []).filter(a => a.h);
-  const li = a => `<div class="cpv-li${a.h ? ' hecha' : ''}"><span>${escHtml(a.t)}</span><em>${escHtml(cpF(a.h ? a.fh : a.f))}</em></div>`;
+  const li = a => `<div class="cpv-li${a.h ? ' hecha' : ''}"><span>${a.c ? `<span class="tk-num">${escHtml(a.c)}</span>${impSolo(a.i)}` : impSolo(a.i)}${escHtml(a.t)}</span><em>${escHtml(cpF(a.h ? a.fh : a.f))}</em></div>`;
   const bits = (p.bi || []).slice().sort((a, b) => (a.f < b.f ? 1 : -1));
   document.getElementById('cpv-ov-slot').innerHTML = `<div class="cpv-ov" onclick="if(event.target===this)cpVisorCerrar()"><div class="cpv-ficha">
     <h3>${escHtml(p.n)}</h3><span class="cpv-et" style="background:${embAttr(c.color || '#64748B')}">${escHtml(c.name)}</span>${p.g && PROG_T[p.g] ? ` <span class="prg prg-${embAttr(p.g)}">${escHtml(PROG_T[p.g])}</span>` : ''}
@@ -6178,8 +6187,8 @@ function repAlCompletar(kind, o, dueno) {
   const emb = kind === 'emb';
   const f = repSiguienteFecha(emb ? o.fecha : o.date, o.repite);
   const nuevo = emb
-    ? { id: embId('a'), texto: o.texto, fecha: f, hecha: false, fechaHecha: '', repite: o.repite }
-    : { id: embId('t'), name: o.name, date: f, priority: o.priority || 'media', done: false, doneDate: null, repite: o.repite };
+    ? { id: embId('a'), texto: o.texto, fecha: f, hecha: false, fechaHecha: '', repite: o.repite, ...(o.imp ? { imp: o.imp } : {}) }
+    : { id: embId('t'), name: o.name, date: f, priority: o.priority || 'media', done: false, doneDate: null, repite: o.repite, ...(o.imp ? { imp: o.imp } : {}) };
   if (emb) dueno.actividades.push(nuevo); else if (kind === 'mod') dueno.tasks.push(nuevo); else state.checklist.push(nuevo);
   o.siguiente = nuevo.id;
   showToast('Próxima repetición: ' + formatDate(f));
@@ -7080,7 +7089,7 @@ function tkCambioFecha(o, nueva, esEmb) {
 function planGrupos() {
   const hoy = embToday(), finSem = parteRango('s', hoy)[1], f30 = fechaMasDias(30);
   const rank = { alta: 0, media: 1, baja: 2 };
-  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
+  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || impN(b) - impN(a) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
   const pend = getAllTasks().filter(t => !t.done);
   const g = f => pend.filter(f).sort(ord);
   return {
@@ -7127,11 +7136,29 @@ function renderPlan() {
   ${G.despues.length ? `<details class="card plan-des"><summary><b>Más adelante</b> (${G.despues.length}) · después de 30 días</summary>${filas(G.despues)}</details>` : ''}`;
 }
 
+// ── Importancia de cada tarea: de 1 a 5 estrellas, justo después del código ──
+function impN(t) { const n = Math.round(Number(t && t.imp) || 0); return n < 0 ? 0 : n > 5 ? 5 : n; }
+function impHtml(t) {
+  if (!t || !t.id) return '';
+  const n = impN(t), id = embAttr(t.id);
+  let s = '';
+  for (let i = 1; i <= 5; i++) s += `<button type="button" class="imp-s${i <= n ? ' on' : ''}" onclick="event.stopPropagation();tkImp('${id}',${i})" title="${i === 1 ? '1 estrella' : i + ' estrellas'} de importancia${i === n ? ' (tócala de nuevo para quitarla)' : ''}">★</button>`;
+  return `<span class="imp" data-id="${id}">${s}</span>`;
+}
+function impSolo(n) { n = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return n ? `<span class="imp-ro" title="Importancia: ${n} de 5">${'★'.repeat(n)}<i>${'★'.repeat(5 - n)}</i></span>` : ''; }
+function tkImp(id, n) {
+  const x = tkBuscarPorId(id); if (!x) return;
+  const nuevo = impN(x.o) === n ? 0 : n;
+  if (nuevo) x.o.imp = nuevo; else delete x.o.imp;
+  saveLocal();
+  document.querySelectorAll('.imp[data-id="' + id + '"]').forEach(el => el.querySelectorAll('.imp-s').forEach((b, i) => b.classList.toggle('on', i < nuevo)));
+  showToast(nuevo ? '★'.repeat(nuevo) + ' ' + nuevo + ' de 5' : 'Sin clasificar');
+}
 function tkNumChip(t, sinClic) {
   const nn = t ? (t.notas ? 1 : 0) + (Array.isArray(t.notasMas) ? t.notasMas.length : 0) : 0, ntxt = nn > 1 ? nn : '';
   const nb = nn ? (sinClic ? `<span class="tk-nota" title="Esta tarea tiene ${nn} ${nn === 1 ? 'nota guardada' : 'notas guardadas'}">📝${ntxt}</span>` : `<button type="button" class="tk-nota" onclick="event.stopPropagation();tkHoja('${embAttr(t.id)}')" title="Tiene ${nn} ${nn === 1 ? 'nota guardada' : 'notas guardadas'}: ábrela">📝${ntxt}</button>`) : '';
   const rb = t && t.reprog ? `<span class="tk-rep${t.reprog >= 3 ? ' alto' : ''}" title="Reprogramada ${t.reprog} ${t.reprog === 1 ? 'vez' : 'veces'}">↻${t.reprog}</span>` : '';
-  return tkNumChip0(t, sinClic) + rb + nb;
+  return tkNumChip0(t, sinClic) + impHtml(t) + rb + nb;
 }
 function tkNumChip0(t, sinClic) {
   if (t && t.num && sinClic) return `<span class="tk-num" title="Número de la tarea">${escHtml(t.num)}</span>`;   // dentro de la ficha no se abre otra ventana: se perdería lo que estés escribiendo
@@ -7155,6 +7182,7 @@ function tkHoja(id) {
       ${fila('Proyecto o empresa', escHtml(x.proy))}
       ${fila('Creada', o.creada ? formatDate(o.creada) : '—')}
       ${fila('Fecha límite', fecha ? `<span${venc ? ' style="color:var(--red);font-weight:700"' : ''}>${formatDate(fecha)}</span>` : 'Sin fecha')}
+      ${fila('Importancia', impHtml({ id: o.id, imp: o.imp }))}
       ${x.kind !== 'emb' && o.priority ? fila('Prioridad', escHtml(o.priority)) : ''}
       ${hecha ? fila('Cumplida el', tkX.fechaHecha(x) ? formatDate(tkX.fechaHecha(x)) : '—') : ''}
       ${o.reprog ? fila('Reprogramada', `<span${o.reprog >= 3 ? ' style="color:var(--red);font-weight:700"' : ''}>${o.reprog} ${o.reprog === 1 ? 'vez' : 'veces'}</span>${o.fechaOrig ? ' · fecha original ' + formatDate(o.fechaOrig) : ''}`) : ''}
