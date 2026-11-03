@@ -983,6 +983,7 @@ body.visor-on { background: var(--gray-100); }
   .cal-semana { grid-template-columns:1fr; } .cal-sd { min-height:0; } .cal-tira { gap:4px; } .cal-dia { padding:6px 1px; } .cal-dia b { font-size:15px; } .cal-p { font-size:9.5px; } }
 .tp-chip { display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; background:#EDE9FE; color:#5B21B6; border-radius:6px; padding:1px 6px; vertical-align:1px; }
 .tp-hora { font-size:12px; font-weight:700; color:var(--gray-600); }
+.rec-agenda { margin:0 0 12px; } .rec-cita { font-size:14px; padding:6px 8px; border-left:3px solid var(--gray-200); margin-bottom:4px; } .rec-cita.prox { border-left-color:#2563EB; background:#EFF6FF; } .rec-cita b { margin-right:4px; }
 </style>
 <body>
 
@@ -1119,7 +1120,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · tarjeta Rutinas de hoy</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · aviso con hora, parte con rutinas y copiar tarea</div>
     </div>
   </nav>
 
@@ -2166,7 +2167,7 @@ function calVistaHtml() {
 }
 function calDetalleHtml(f) {
   const hoy = embToday(), hoyD = hoyLocal(), todas = calTodas();
-  const grupos = { venc: todas.filter(t => t.date === f).sort((a, b) => (a.done - b.done)), crea: todas.filter(t => t.creada === f), cump: todas.filter(t => t.done && t.doneDate === f) };
+  const grupos = { venc: todas.filter(t => t.date === f).sort((a, b) => (a.done - b.done) || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99'))), crea: todas.filter(t => t.creada === f), cump: todas.filter(t => t.done && t.doneDate === f) };
   const orden = [calModo].concat(Object.keys(CAL_MODOS).filter(k => k !== calModo));
   const items = [].concat(...orden.map(k => grupos[k]));
   tkRegistrar('cal', items, calPintar);
@@ -2724,6 +2725,7 @@ function tkFila(ctx, t, n, hoy, o) {
       <div class="dt-acts">
         <button type="button" class="dt-btn" title="${t.done ? 'Reabrir' : 'Marcar como cumplida'}" onclick="tkAccion('${ctx}','hecha',${n})">${t.done ? '↩' : '✓'}</button>
         ${t.done ? '' : `<button type="button" class="dt-btn" title="Reprogramar" onclick="tkAccion('${ctx}','fecha',${n})">📅</button>`}
+        <button type="button" class="dt-btn" title="Repetir en otra fecha (crea una copia)" onclick="tkAccion('${ctx}','copiar',${n})">⧉</button>
         ${soBotonHtml(t.id, `tkSoporte('${ctx}',${n})`)}
         <button type="button" class="dt-btn" title="Editar" onclick="tkAccion('${ctx}','editar',${n})">✏️</button>
         <button type="button" class="dt-btn dt-del" title="Eliminar" onclick="tkBorrar(this,'${ctx}',${n})">🗑</button>
@@ -2763,6 +2765,13 @@ function tkAccion(ctx, accion, n) {
         <input type="date" id="tk-fecha-${id}" value="${embAttr(fecha)}">
         <button type="button" class="btn-add" onclick="tkFecha('${ctx}',${n},null)">Guardar fecha</button>
       </div>`;
+  } else if (accion === 'copiar') {
+    panel.innerHTML = `<div class="so-sub" style="margin:6px 0">Crea una copia nueva de esta tarea en otra fecha (la original no cambia).</div><div class="dt-rapidos">
+        <button type="button" class="dt-chip" onclick="tkCopiar('${ctx}',${n},1)">Mañana</button>
+        <button type="button" class="dt-chip" onclick="tkCopiar('${ctx}',${n},7)">+1 semana</button>
+        <button type="button" class="dt-chip" onclick="tkCopiar('${ctx}',${n},30)">+1 mes</button>
+        <button type="button" class="dt-chip" onclick="tkCopiar('${ctx}',${n},365)">+1 año</button>
+      </div><div class="dt-form"><input type="date" id="tk-fecha-${id}" value="${embAttr(fecha)}"><button type="button" class="btn-add" onclick="tkCopiar('${ctx}',${n},null)">Crear copia</button></div>`;
   } else {
     panel.innerHTML = `<div class="dt-form dt-edit">
         <input type="text" id="tk-nombre-${id}" value="${embAttr(nombre)}" placeholder="Nombre de la tarea" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();tkGuardar('${ctx}',${n});}">
@@ -2774,6 +2783,17 @@ function tkAccion(ctx, accion, n) {
       </div>`;
     const i = document.getElementById('tk-nombre-' + id); if (i) i.focus();
   }
+}
+function tkCopiar(ctx, n, dias) {
+  const ref = tkRef(ctx, n); if (!ref) { if (tkRefresco[ctx]) tkRefresco[ctx](); return; }
+  let f;
+  if (dias === null) { f = document.getElementById('tk-fecha-' + ctx + '-' + n).value; if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) { showToast('⚠️ Elige una fecha'); return; } }
+  else { const b = (ref.tipo === 'emb' ? ref.obj.fecha : ref.obj.date) || embToday(); f = calSuma(b, dias); }
+  const o = ref.obj, id = (ref.tipo === 'emb' ? 'a_' : ref.tipo === 'cl' ? 'cl_' : 't_') + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+  if (ref.tipo === 'emb') ref.dueno.actividades.push({ id, texto: o.texto, fecha: f, hecha: false, fechaHecha: '', imp: o.imp || 0, repite: o.repite || '' });
+  else { const c = { id, name: o.name, date: f, priority: o.priority || 'media', done: false, doneDate: null }; ['tipo', 'hora', 'imp', 'repite'].forEach(k => { if (o[k]) c[k] = o[k]; }); (ref.tipo === 'cl' ? state.checklist : ref.dueno.tasks).push(c); }
+  showToast('⧉ Copia creada para el ' + formatDate(f));
+  tkRefrescar(ctx);
 }
 function tkFecha(ctx, n, dias) {
   const ref = tkRef(ctx, n); if (!ref) { if (tkRefresco[ctx]) tkRefresco[ctx](); return; }
@@ -6523,12 +6543,18 @@ function recordatorioDia() {
     if (localStorage.getItem(clave) === hoy) return;
     if (document.getElementById('modal').style.display === 'flex') return;
     const d = datosDelDia();
-    if (!d.venc && !d.hoyN && !d.seg && !d.cob) return;
+    const cit = calTodas().filter(t => !t.done && t.date === hoy && t.hora).sort((p, q) => p.hora.localeCompare(q.hora));
+    const rd = rtDelDia(hoy), rpend = rd.filter(r => !rtHecha(r, hoy)).length;
+    if (!d.venc && !d.hoyN && !d.seg && !d.cob && !cit.length && !rpend) return;
     localStorage.setItem(clave, hoy);
     const h = new Date().getHours(), saludo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
     const fila = (n, txt, accion, cls) => n ? `<button type="button" class="rec-fila ${cls || ''}" onclick="${accion}"><b>${n}</b><span>${txt}</span><i>›</i></button>` : '';
+    const ahora = ('0' + new Date().getHours()).slice(-2) + ':' + ('0' + new Date().getMinutes()).slice(-2), prox = cit.find(t => t.hora >= ahora) || null;
+    const agenda = cit.length ? `<div class="rec-agenda"><div class="cal-gt">Con hora hoy</div>${cit.slice(0, 4).map(t => `<div class="rec-cita${prox && prox.id === t.id ? ' prox' : ''}"><b>${escHtml(t.hora)}</b> ${t.tipo && CR_TIPOS[t.tipo] ? `<span class="tp-chip">${CR_TIPOS[t.tipo]}</span> ` : ''}${t.name}</div>`).join('')}${cit.length > 4 ? `<div class="cal-vac">+${cit.length - 4} más</div>` : ''}${prox ? '' : '<div class="cal-vac">Ya pasó la hora de todas.</div>'}</div>` : '';
     setModal(`<h3>${saludo}</h3>
       <p class="bk-p" style="margin-bottom:12px">Esto es lo que necesita atención hoy:</p>
+      ${agenda}
+      ${fila(rpend, rpend === 1 ? 'rutina sin marcar hoy' : 'rutinas sin marcar hoy', 'closeModal();calIrDia(embToday())')}
       ${fila(d.venc, d.venc === 1 ? 'tarea vencida' : 'tareas vencidas', 'dashHoy()', 'rojo')}
       ${fila(d.hoyN, d.hoyN === 1 ? 'tarea para hoy' : 'tareas para hoy', 'dashHoy()')}
       ${fila(d.seg, d.seg === 1 ? 'prospecto sin seguimiento' : 'prospectos sin seguimiento', 'dashSeguimiento()', 'ambar')}
@@ -7402,7 +7428,7 @@ function tkCambioFecha(o, nueva, esEmb) {
 function planGrupos() {
   const hoy = embToday(), finSem = parteRango('s', hoy)[1], f30 = fechaMasDias(30);
   const rank = { alta: 0, media: 1, baja: 2 };
-  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || impN(b) - impN(a) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
+  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99')) || impN(b) - impN(a) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
   const pend = getAllTasks().filter(t => !t.done);
   const g = f => pend.filter(f).sort(ord);
   return {
@@ -7653,7 +7679,8 @@ function parteDatos(tipo, ref) {
   nov.sort((p, q) => String(p.iso).localeCompare(String(q.iso)));
   const sops = soList().filter(s => en(s.fecha)).sort((p, q) => p.n - q.n);
   const ing = (state.ingresos || []).filter(i => en(i.fecha));
-  return { a, b, cumplidas, creadas, pendientes, venc, nov, contactos: nov.filter(n => n.contacto).length, etapas: nov.filter(n => /^Etapa:/.test(n.texto)).length, sops, ing, ingTotal: ing.reduce((t, i) => t + (Number(i.monto) || 0), 0) };
+  const hasta = b < embToday() ? b : embToday(), rut = rtList().map(r => { let prog = 0, hec = 0; for (let f = a; f <= hasta; f = calSuma(f, 1)) if (rtAplica(r, f)) { prog++; if (rtHecha(r, f)) hec++; } return { r, prog, hec }; }).filter(x => x.prog);
+  return { a, b, rut, cumplidas, creadas, pendientes, venc, nov, contactos: nov.filter(n => n.contacto).length, etapas: nov.filter(n => /^Etapa:/.test(n.texto)).length, sops, ing, ingTotal: ing.reduce((t, i) => t + (Number(i.monto) || 0), 0) };
 }
 function parteHtml(tipo, ref) {
   const d = parteDatos(tipo, ref), nota = ((state.partes || {})[parteClave(tipo, ref)] || {}).nota || '';
@@ -7662,6 +7689,7 @@ function parteHtml(tipo, ref) {
   let h = `<div class="kpi">${k('Tareas cumplidas', d.cumplidas.length)}${k('Tareas creadas', d.creadas.length)}${k('Pendientes', d.pendientes.length)}${k('Vencidas antes del periodo', d.venc.length)}</div>
     <div class="kpi">${k('Novedades', d.nov.length)}${k('Contactos', d.contactos)}${k('Cambios de etapa', d.etapas)}${k('Soportes', d.sops.length)}${k('Ingresos', fmtCOP(d.ingTotal))}</div>`;
   h += `<h2>Tareas cumplidas (${d.cumplidas.length})</h2>` + impTabla([{ t: 'N° de tarea' }, { t: 'Tarea' }, { t: 'Proyecto o empresa' }, { t: 'Cumplida el' }], d.cumplidas.map(t => [escHtml(t.num), escHtml(t.nombre), escHtml(t.proy), t.fh ? formatDate(t.fh) : '—']), 'No se cumplió ninguna tarea en este periodo.');
+  h += `<h2>Rutinas del periodo (${d.rut.length})</h2>` + impTabla([{ t: 'Rutina' }, { t: 'Frecuencia' }, { t: 'Cumplida', n: 1 }, { t: 'Constancia', n: 1 }, { t: 'Racha actual', n: 1 }], d.rut.map(x => [escHtml((x.r.cod || '') + ' ' + x.r.nombre), escHtml(rtTexto(x.r)), x.hec + ' de ' + x.prog, Math.round(x.hec / x.prog * 100) + '%', rtRacha(x.r) + (rtRacha(x.r) === 1 ? ' día' : ' días')]), 'No hubo rutinas en este periodo.');
   h += `<h2>Pendientes hasta el cierre (${d.pendientes.length})</h2>` + impTabla([{ t: 'N° de tarea' }, { t: 'Tarea' }, { t: 'Proyecto o empresa' }, { t: 'Fecha límite' }], d.pendientes.map(t => [escHtml(t.num), escHtml(t.nombre), escHtml(t.proy), formatDate(t.fecha) + (t.fecha < d.a ? ' (vencida)' : '')]), 'No quedan tareas pendientes con fecha hasta el cierre.');
   h += `<h2>Novedades y contactos (${d.nov.length})</h2>` + (d.nov.length ? d.nov.map(n => `<div class="nov"><small>${n.contacto ? 'Contacto · ' : ''}${escHtml(embFechaHora(n.iso))} · ${escHtml(n.empresa)}</small>${escHtml(n.texto)}</div>`).join('') : '<div class="vacio">Sin novedades en este periodo.</div>');
   h += `<h2>Soportes cargados (${d.sops.length})</h2>` + impTabla(IMP_COL_SOP, impFilasSoportes(d.sops), 'No se cargaron soportes en este periodo.');
@@ -7680,7 +7708,7 @@ function parteAbrir(tipo, ref) {
     <div class="pt-tabs">${tab('d', 'Diario')}${tab('s', 'Semanal')}${tab('m', 'Mensual')}
       <input type="date" id="pt-ref" value="${embAttr(_parte.ref)}" onchange="parteCambiar(null,this.value)" title="Fecha de referencia"></div>
     <div class="pt-tit"><b>${escHtml(parteCodigo(_parte.tipo, _parte.ref))}</b> · ${escHtml(parteTitulo(_parte.tipo, _parte.ref))}</div>
-    <div class="dash-resumen pt-k">${k('Cumplidas', d.cumplidas.length)}${k('Pendientes', d.pendientes.length)}${k('Novedades', d.nov.length)}${k('Soportes', d.sops.length)}</div>
+    <div class="dash-resumen pt-k">${k('Rutinas', d.rut.length ? Math.round(d.rut.reduce((s, x) => s + x.hec, 0) / d.rut.reduce((s, x) => s + x.prog, 0) * 100) + '%' : '—')}${k('Cumplidas', d.cumplidas.length)}${k('Pendientes', d.pendientes.length)}${k('Novedades', d.nov.length)}${k('Soportes', d.sops.length)}</div>
     <div class="modal-field"><label>Tus observaciones (van al final del parte)</label>
       <textarea id="pt-nota" rows="5" maxlength="4000" placeholder="Qué salió bien, qué quedó pendiente, qué se necesita…">${escHtml(nota)}</textarea></div>
     <div class="so-ayuda">Atocha arma el resto con las tareas cumplidas y pendientes, novedades, soportes e ingresos del periodo. Al imprimir puedes elegir "Guardar como PDF".</div>
