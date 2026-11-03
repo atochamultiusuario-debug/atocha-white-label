@@ -984,6 +984,8 @@ body.visor-on { background: var(--gray-100); }
 .tp-chip { display:inline-block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; background:#EDE9FE; color:#5B21B6; border-radius:6px; padding:1px 6px; vertical-align:1px; }
 .tp-hora { font-size:12px; font-weight:700; color:var(--gray-600); }
 .rec-agenda { margin:0 0 12px; } .rec-cita { font-size:14px; padding:6px 8px; border-left:3px solid var(--gray-200); margin-bottom:4px; } .rec-cita.prox { border-left-color:#2563EB; background:#EFF6FF; } .rec-cita b { margin-right:4px; }
+.dc-item { border-top:1px solid var(--gray-100); padding:8px 2px; } .dc-item summary { cursor:pointer; font-size:14px; } .dc-texto { white-space:pre-wrap; overflow-wrap:anywhere; font-size:13.5px; background:var(--gray-100); border-radius:8px; padding:10px 12px; margin:8px 0; max-height:420px; overflow:auto; }
+.dc-bts { display:flex; gap:6px; flex-wrap:wrap; } .dc-pub { font-size:11px; font-weight:700; color:#047857; background:#D1FAE5; border-radius:999px; padding:1px 8px; } .dc-priv { font-size:11px; font-weight:700; color:var(--gray-600); background:var(--gray-200); border-radius:999px; padding:1px 8px; }
 </style>
 <body>
 
@@ -1120,7 +1122,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · aviso con hora, parte con rutinas y copiar tarea</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Documentación por proyecto</div>
     </div>
   </nav>
 
@@ -2167,7 +2169,7 @@ function calVistaHtml() {
 }
 function calDetalleHtml(f) {
   const hoy = embToday(), hoyD = hoyLocal(), todas = calTodas();
-  const grupos = { venc: todas.filter(t => t.date === f).sort((a, b) => (a.done - b.done) || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99'))), crea: todas.filter(t => t.creada === f), cump: todas.filter(t => t.done && t.doneDate === f) };
+  const grupos = { venc: todas.filter(t => t.date === f).sort((a, b) => (a.done - b.done) || impN(b) - impN(a) || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99'))), crea: todas.filter(t => t.creada === f), cump: todas.filter(t => t.done && t.doneDate === f) };
   const orden = [calModo].concat(Object.keys(CAL_MODOS).filter(k => k !== calModo));
   const items = [].concat(...orden.map(k => grupos[k]));
   tkRegistrar('cal', items, calPintar);
@@ -2685,7 +2687,7 @@ function tkDeMod(m) {
   return (m.tasks || []).map(t => ({ ...t, name: escHtml(t.name), projectName: escHtml(modTxt(m)), projectId: m.id }));
 }
 function tkOrden(lista) {
-  return lista.slice().sort((x, y) => (x.done - y.done) || (x.date || '9999').localeCompare(y.date || '9999'));
+  return lista.slice().sort((x, y) => (x.done - y.done) || (x.date || '9999').localeCompare(y.date || '9999') || impN(y) - impN(x));
 }
 const tkListas = {}, tkRefresco = {};
 function tkRegistrar(ctx, lista, fn) { tkListas[ctx] = lista.map(t => ({ pid: t.projectId, id: t.id })); tkRefresco[ctx] = fn; }
@@ -3304,7 +3306,7 @@ function renderModule(id) {
     </div>
   </div>`;
 
-  document.getElementById('page-content').innerHTML = html + ctProyHtml(m) + soProyHtml(m) + modEmbudoProyHtml(m) + modEmbudoHtml(m);
+  document.getElementById('page-content').innerHTML = html + ctProyHtml(m) + soProyHtml(m) + dcProyHtml(m) + modEmbudoProyHtml(m) + modEmbudoHtml(m);
 }
 
 function renderTaskList(tasks, modId) {
@@ -3424,7 +3426,7 @@ function deleteTask(modId, taskId) {
 // ═══════════════════════════════════════════
 //  CHECKLIST MAESTRO
 // ═══════════════════════════════════════════
-let checkFilter = 'all';
+let checkFilter = 'all', checkOrden = 'fecha';
 function renderChecklist() {
   const today = new Date(); today.setHours(0,0,0,0);
   let html = `
@@ -3443,6 +3445,9 @@ function renderChecklist() {
     <div class="checklist-filters">
       ${['all','pending','done','overdue'].map(f => `<button class="filter-btn ${checkFilter===f?'active':''}" onclick="checkFilter='${f}';renderChecklist()">${{all:'Todas',pending:'Pendientes',done:'Cumplidas',overdue:'Vencidas'}[f]}</button>`).join('')}
     </div>
+    <div class="checklist-filters" title="Cómo ordenar la lista"><span class="so-sub" style="align-self:center">Orden:</span>
+      ${[['fecha', 'Por fecha'], ['imp', '★ Más importantes primero']].map(([k, n]) => `<button class="filter-btn ${checkOrden === k ? 'active' : ''}" onclick="checkOrden='${k}';renderChecklist()">${n}</button>`).join('')}
+    </div>
     <div class="tasks-list" id="cl-list">${renderChecklistItems()}</div>
   </div>`;
   document.getElementById('page-content').innerHTML = html;
@@ -3455,6 +3460,10 @@ function renderChecklistItems() {
   else if (checkFilter === 'done') tasks = tasks.filter(t => t.done);
   else if (checkFilter === 'overdue') tasks = tasks.filter(t => !t.done && t.date && fechaLocal(t.date) < today);
   if (!tasks.length) return `<div style="text-align:center;padding:24px;color:var(--gray-400);font-size:14px;">Sin tareas en esta categoría.</div>`;
+  const fe = t => t.date || '9999', hr = t => String(t.hora || '99:99');
+  tasks = tasks.slice().sort(checkOrden === 'imp'
+    ? (x, y) => (x.done - y.done) || impN(y) - impN(x) || fe(x).localeCompare(fe(y)) || hr(x).localeCompare(hr(y))
+    : (x, y) => (x.done - y.done) || fe(x).localeCompare(fe(y)) || impN(y) - impN(x) || hr(x).localeCompare(hr(y)));
   return tasks.map(t => {
     const isOverdue = !t.done && t.date && fechaLocal(t.date) < today;
     const pid = t.projectId || '';
@@ -5636,6 +5645,7 @@ function cpPayload(m) {
     cols: cols.map(c => ({ id: c.id, name: c.name, color: c.color })), pros,
     tareas: (m.tasks || []).map(t => ({ n: t.name || '', f: t.date || '', h: t.done ? 1 : 0, c: t.num || '', i: impN(t) })),
     con: ctList().filter(c => (c.proyectos || []).indexOf(m.id) >= 0).map(c => ({ cod: c.cod || '', n: c.nombre || '', t: CT_TIPOS[c.tipo] || '', em: c.empresa || '', ca: c.cargo || '', tel: c.telefono || '', ema: c.email || '', ci: c.ciudad || '', no: c.notas || '' })),
+    dc: dcList(m).filter(d => d.pub).sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || ''))).map(d => ({ t: d.titulo || '', x: d.texto || '', f: d.fecha || '' })),
     docs: soList().filter(s => s.moduleId === m.id).sort((a, b) => b.n - a.n).map(s => ({ cod: soCodigo(s), t: s.titulo || '', k: s.tipo || '', f: s.fecha || '', u: s.url || '', e: s.empresa || '' })) };
 }
 // Devuelve true si publicó, false si falló, 'falta' si la base aún no tiene el script.
@@ -5805,6 +5815,7 @@ function cpVisorRender() {
         ${c.em || c.ca ? `<div class="cpv-sub">${escHtml([c.em, c.ca].filter(Boolean).join(' · '))}</div>` : ''}
         <div class="cpv-sub">${c.tel ? (wa ? `<a href="${embAttr(wa)}" target="_blank" rel="noopener noreferrer">📱 ${escHtml(c.tel)}</a>` : '📱 ' + escHtml(c.tel)) : ''}${c.ema ? ` <a href="mailto:${embAttr(c.ema)}">✉️ ${escHtml(c.ema)}</a>` : ''}${c.ci ? ' · ' + escHtml(c.ci) : ''}</div>
         ${c.no ? `<div class="cpv-sub" style="white-space:pre-wrap">${escHtml(c.no)}</div>` : ''}</div>`; }).join('')}</div>` : ''}
+    ${(d.dc || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentación (${d.dc.length})</div>${d.dc.map(x => `<details class="dc-item"><summary><b>${escHtml(x.t)}</b> <span class="so-sub">${escHtml(cpF(x.f))}</span></summary><div class="dc-texto">${escHtml(x.x)}</div></details>`).join('')}</div>` : ''}
     ${(d.docs || []).length ? `<div class="card" style="margin-top:16px"><div class="card-title">Documentos del proyecto (${d.docs.length})</div>${d.docs.map(s => { const u = embUrlSegura(s.u); return `<div class="cpv-ct">
         <div><span class="tk-num">${escHtml(s.cod)}</span>${u ? `<a href="${embAttr(u)}" target="_blank" rel="noopener noreferrer"><b>${escHtml(s.t)}</b></a>` : `<b>${escHtml(s.t)}</b>`}</div>
         <div class="cpv-sub">${escHtml([s.k, cpF(s.f), s.e].filter(Boolean).join(' · '))}</div></div>`; }).join('')}<div class="cpv-sub" style="margin-top:8px">Los documentos se abren en Google Drive: si te pide permiso, solicítalo a quien te compartió este enlace.</div></div>` : ''}
@@ -6578,6 +6589,7 @@ function buscarRender() {
   const add = (titulo, items) => { if (items.length) grupos.push({ titulo, items }); };
   const it = (nombre, detalle, accion) => ({ nombre, detalle, accion });
   add('Proyectos', state.modules.filter(m => has(m.name, m.desc, m.cod)).map(m => it(modTxt(m), m.desc || '', `goPage('mod_${embAttr(m.id)}')`)));
+  add('Documentación', [].concat(...state.modules.map(m => dcList(m).filter(d => has(d.titulo, d.texto)).map(d => it(d.titulo, modTxt(m) + ' · documentación', `goPage('mod_${embAttr(m.id)}')`)))));
   const tareas = [];
   state.modules.forEach(m => m.tasks.forEach(t => { if (has(t.name)) tareas.push(it(t.name, modTxt(m) + (t.date ? ' · ' + formatDate(t.date) : '') + (t.done ? ' · cumplida' : ''), `goPage('mod_${embAttr(m.id)}')`)); }));
   state.checklist.forEach(t => { if (has(t.name)) tareas.push(it(t.name, 'Checklist Maestro' + (t.date ? ' · ' + formatDate(t.date) : '') + (t.done ? ' · cumplida' : ''), `goPage('checklist')`)); });
@@ -7251,6 +7263,50 @@ function soCsv() {
   showToast('📥 Descargado: ' + a.download);
 }
 // ── Tarjeta en la página de cada proyecto ──
+// ═══════════════════════════════════════════
+//  DOCUMENTACIÓN del proyecto: texto largo para pegar (acuerdos, especificaciones, correos, guías…)
+//  Cada entrada puede verse o no en el enlace de invitado de ese proyecto.
+// ═══════════════════════════════════════════
+function dcList(m) { if (!Array.isArray(m.documentacion)) m.documentacion = []; return m.documentacion; }
+function dcProyHtml(m) {
+  const l = dcList(m).slice().sort((a, b) => String(b.fecha || '').localeCompare(String(a.fecha || '')) || (b.ms || 0) - (a.ms || 0)), mid = embAttr(m.id);
+  return `<div class="card" id="dc-card"><div class="so-cab"><div><div class="card-title" style="margin:0">Documentación <span class="plan-n">${l.length}</span></div>
+      <div class="so-sub">Pega aquí acuerdos, especificaciones, correos o guías de este proyecto. 👁 = lo ve quien abra el enlace de invitado.</div></div>
+      <div class="so-btns"><button type="button" class="btn-add" onclick="dcForm('${mid}','')">+ Agregar</button></div></div>
+    ${l.length ? l.map(d => `<details class="dc-item"><summary><b>${escHtml(d.titulo)}</b> <span class="so-sub">${formatDate(d.fecha)}</span> ${d.pub ? '<span class="dc-pub" title="Visible en el enlace de invitado">👁 Invitado</span>' : '<span class="dc-priv" title="Solo tú la ves">🔒 Privada</span>'}</summary>
+      <div class="dc-texto">${escHtml(d.texto)}</div>
+      <div class="dc-bts"><button type="button" class="edit-btn" onclick="dcCopiar('${mid}','${embAttr(d.id)}')">📋 Copiar texto</button><button type="button" class="edit-btn" onclick="dcForm('${mid}','${embAttr(d.id)}')">✏️ Editar</button><button type="button" class="edit-btn" onclick="dcBorrar('${mid}','${embAttr(d.id)}')">🗑 Borrar</button></div></details>`).join('') : '<div class="emb-none" style="padding:12px 4px">Aún no hay documentación en este proyecto.</div>'}</div>`;
+}
+function dcForm(mid, id) {
+  const m = modPorId(mid); if (!m) return; const d = id ? dcList(m).find(x => x.id === id) : null;
+  setModal(`<h3>${d ? 'Editar documentación' : 'Nueva documentación'}</h3>
+    <div class="modal-field"><label>Título</label><input type="text" id="dc-t" maxlength="160" value="${embAttr(d ? d.titulo : '')}" placeholder="Ej: Acuerdo comercial con el aliado" autocomplete="off"></div>
+    <div class="modal-field"><label>Texto (pega aquí)</label><textarea id="dc-x" rows="12" maxlength="60000" placeholder="Pega o escribe el contenido…" style="width:100%;resize:vertical">${escHtml(d ? d.texto : '')}</textarea></div>
+    <label class="rt-fila" style="border:0"><input type="checkbox" id="dc-pub"${!d || d.pub ? ' checked' : ''}><span>Visible en el enlace de invitado de este proyecto</span></label>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="dcGuardar('${embAttr(mid)}','${embAttr(id || '')}')">Guardar</button></div>`, 620);
+  const i = document.getElementById(d ? 'dc-x' : 'dc-t'); if (i) i.focus();
+}
+function dcGuardar(mid, id) {
+  const m = modPorId(mid); if (!m) return;
+  const titulo = document.getElementById('dc-t').value.trim().slice(0, 160), texto = document.getElementById('dc-x').value.slice(0, 60000), pub = document.getElementById('dc-pub').checked;
+  if (!titulo) { showToast('⚠️ Escribe un título'); return; }
+  if (!texto.trim()) { showToast('⚠️ Pega o escribe el texto'); return; }
+  let d = id ? dcList(m).find(x => x.id === id) : null;
+  if (d) { d.titulo = titulo; d.texto = texto; d.pub = pub; }
+  else dcList(m).push({ id: 'dc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5), titulo, texto, pub, fecha: embToday(), ms: Date.now() });
+  saveLocal(); closeModal(); goPage(currentPage); showToast('✅ Documentación guardada');
+}
+function dcCopiar(mid, id) {
+  const m = modPorId(mid), d = m && dcList(m).find(x => x.id === id); if (!d) return;
+  const ok = () => showToast('📋 Texto copiado');
+  try { navigator.clipboard.writeText(d.texto).then(ok, () => dcCopiarViejo(d.texto, ok)); } catch (e) { dcCopiarViejo(d.texto, ok); }
+}
+function dcCopiarViejo(t, ok) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); ok(); } catch (e) { showToast('No se pudo copiar'); } a.remove(); }
+function dcBorrar(mid, id) {
+  const m = modPorId(mid), d = m && dcList(m).find(x => x.id === id); if (!d) return;
+  if (!confirm('¿Borrar "' + d.titulo + '"? No se puede deshacer.')) return;
+  m.documentacion = dcList(m).filter(x => x.id !== id); saveLocal(); goPage(currentPage);
+}
 function soProyHtml(m) {
   const l = soList().filter(s => s.moduleId === m.id).sort((a, b) => b.n - a.n);
   return `<div class="card so-card">
@@ -7428,7 +7484,7 @@ function tkCambioFecha(o, nueva, esEmb) {
 function planGrupos() {
   const hoy = embToday(), finSem = parteRango('s', hoy)[1], f30 = fechaMasDias(30);
   const rank = { alta: 0, media: 1, baja: 2 };
-  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99')) || impN(b) - impN(a) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
+  const ord = (a, b) => (a.date || '9999').localeCompare(b.date || '9999') || impN(b) - impN(a) || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99')) || (rank[a.priority] ?? 1) - (rank[b.priority] ?? 1) || String(a.num || '').localeCompare(String(b.num || ''));
   const pend = getAllTasks().filter(t => !t.done);
   const g = f => pend.filter(f).sort(ord);
   return {
