@@ -1123,7 +1123,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Documentación con tablas</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · formularios no se cierran solos</div>
     </div>
   </nav>
 
@@ -2028,7 +2028,7 @@ function rtForm(id, pestana) {
       <div class="rt-dias">${RT_ORD.map(d => `<label class="rt-d"><input type="checkbox" class="rt-dchk" value="${d}"${dias.indexOf(d) >= 0 ? ' checked' : ''}${tipo === 'dias' ? '' : ' disabled'}><span>${RT_C[d]}</span></label>`).join('')}</div></div>
     <div class="modal-field"><label>Proyecto <span class="emb-hint">opcional</span></label><select id="rt-proy"><option value="">General (sin proyecto)</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}"${r && r.moduleId === m.id ? ' selected' : ''}>${escHtml(modTxt(m))}</option>`).join('')}</select></div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="rtGuardar('${embAttr(id || '')}')">${r ? 'Guardar' : 'Crear rutina'}</button></div>`, 480);
-  const n = document.getElementById('rt-nombre'); if (n) n.focus();
+  modalFijo(true); const n = document.getElementById('rt-nombre'); if (n) n.focus();
 }
 function rtTipo() {
   const t = document.getElementById('rt-tipo').value;
@@ -2067,7 +2067,7 @@ function evForm(tipo) {
     <div class="modal-field"><label>Proyecto <span class="emb-hint">opcional</span></label><select id="ev-proy"><option value="">General (Checklist Maestro)</option>${modsPorNumero().map(m => `<option value="${embAttr(m.id)}">${escHtml(modTxt(m))}</option>`).join('')}</select></div>
     <div class="modal-field"><label>Importancia</label><select id="ev-imp"><option value="0">Sin clasificar</option>${[1, 2, 3, 4, 5].map(n => `<option value="${n}">${'★'.repeat(n)}</option>`).join('')}</select></div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="evGuardar('${tipo}')">Crear ${CR_TIPOS[tipo].toLowerCase()}</button></div>`, 480);
-  crTmp = ''; const n = document.getElementById('ev-nombre'); if (n) n.focus();
+  modalFijo(true); crTmp = ''; const n = document.getElementById('ev-nombre'); if (n) n.focus();
 }
 function evGuardar(tipo) {
   const name = document.getElementById('ev-nombre').value.trim().slice(0, 300), fecha = document.getElementById('ev-fecha').value, hora = document.getElementById('ev-hora').value;
@@ -7286,6 +7286,7 @@ function dcForm(mid, id) {
     <div class="dc-imp"><button type="button" class="edit-btn" onclick="document.getElementById('dc-file').click()">📄 Cargar desde un archivo (Word .docx, .txt, .md, .csv, .html)</button><input type="file" id="dc-file" accept=".docx,.txt,.md,.csv,.json,.html,.htm,.rtf,text/*" style="display:none" onchange="dcArchivo(this)"><span class="so-sub" id="dc-msg"> También puedes arrastrar el archivo al cuadro de texto. Los PDF no: ábrelos, selecciona el texto, cópialo (Ctrl+C) y pégalo aquí.</span></div>
     <label class="rt-fila" style="border:0"><input type="checkbox" id="dc-pub"${!d || d.pub ? ' checked' : ''}><span>Visible en el enlace de invitado de este proyecto</span></label>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="dcGuardar('${embAttr(mid)}','${embAttr(id || '')}')">Guardar</button></div>`, 620);
+  modalFijo(true);   // un clic o arrastre que termine fuera de la ventana no debe cerrarla ni borrar lo pegado
   const tx = document.getElementById('dc-x');
   tx.addEventListener('dragover', e => e.preventDefault());
   tx.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) { e.preventDefault(); dcArchivo({ files: [f], value: '' }); } });
