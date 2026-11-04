@@ -986,6 +986,7 @@ body.visor-on { background: var(--gray-100); }
 .rec-agenda { margin:0 0 12px; } .rec-cita { font-size:14px; padding:6px 8px; border-left:3px solid var(--gray-200); margin-bottom:4px; } .rec-cita.prox { border-left-color:#2563EB; background:#EFF6FF; } .rec-cita b { margin-right:4px; }
 .dc-item { border-top:1px solid var(--gray-100); padding:8px 2px; } .dc-item summary { cursor:pointer; font-size:14px; } .dc-texto { white-space:pre-wrap; overflow-wrap:anywhere; font-size:13.5px; background:var(--gray-100); border-radius:8px; padding:10px 12px; margin:8px 0; max-height:420px; overflow:auto; }
 .dc-bts { display:flex; gap:6px; flex-wrap:wrap; } .dc-pub { font-size:11px; font-weight:700; color:#047857; background:#D1FAE5; border-radius:999px; padding:1px 8px; } .dc-priv { font-size:11px; font-weight:700; color:var(--gray-600); background:var(--gray-200); border-radius:999px; padding:1px 8px; }
+.dc-imp { margin:4px 0 10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 </style>
 <body>
 
@@ -1122,7 +1123,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Documentación por proyecto</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · Documentación con tablas</div>
     </div>
   </nav>
 
@@ -7282,9 +7283,51 @@ function dcForm(mid, id) {
   setModal(`<h3>${d ? 'Editar documentación' : 'Nueva documentación'}</h3>
     <div class="modal-field"><label>Título</label><input type="text" id="dc-t" maxlength="160" value="${embAttr(d ? d.titulo : '')}" placeholder="Ej: Acuerdo comercial con el aliado" autocomplete="off"></div>
     <div class="modal-field"><label>Texto (pega aquí)</label><textarea id="dc-x" rows="12" maxlength="60000" placeholder="Pega o escribe el contenido…" style="width:100%;resize:vertical">${escHtml(d ? d.texto : '')}</textarea></div>
+    <div class="dc-imp"><button type="button" class="edit-btn" onclick="document.getElementById('dc-file').click()">📄 Cargar desde un archivo (Word .docx, .txt, .md, .csv, .html)</button><input type="file" id="dc-file" accept=".docx,.txt,.md,.csv,.json,.html,.htm,.rtf,text/*" style="display:none" onchange="dcArchivo(this)"><span class="so-sub" id="dc-msg"> También puedes arrastrar el archivo al cuadro de texto. Los PDF no: ábrelos, selecciona el texto, cópialo (Ctrl+C) y pégalo aquí.</span></div>
     <label class="rt-fila" style="border:0"><input type="checkbox" id="dc-pub"${!d || d.pub ? ' checked' : ''}><span>Visible en el enlace de invitado de este proyecto</span></label>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="dcGuardar('${embAttr(mid)}','${embAttr(id || '')}')">Guardar</button></div>`, 620);
+  const tx = document.getElementById('dc-x');
+  tx.addEventListener('dragover', e => e.preventDefault());
+  tx.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if (f) { e.preventDefault(); dcArchivo({ files: [f], value: '' }); } });
   const i = document.getElementById(d ? 'dc-x' : 'dc-t'); if (i) i.focus();
+}
+async function dcTextoDeArchivo(f) {
+  const n = (f.name || '').toLowerCase();
+  if (n.endsWith('.docx')) {
+    const b = new Uint8Array(await f.arrayBuffer()), dv = new DataView(b.buffer);
+    let e = -1; for (let i = b.length - 22; i >= Math.max(0, b.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error('zip');
+    let p = dv.getUint32(e + 16, true); const cnt = dv.getUint16(e + 10, true);
+    for (let k = 0; k < cnt; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const met = dv.getUint16(p + 10, true), csz = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      const nom = new TextDecoder().decode(b.subarray(p + 46, p + 46 + nl));
+      if (nom === 'word/document.xml') {
+        const ds = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true), datos = b.subarray(ds, ds + csz);
+        let xml;
+        if (met === 0) xml = new TextDecoder().decode(datos);
+        else { const s = new Blob([datos]).stream().pipeThrough(new DecompressionStream('deflate-raw')); xml = await new Response(s).text(); }
+        return xml.replace(/<\/w:tc>/g, '\u0001').replace(/<\/w:tr>/g, '\u0002').replace(/<w:tab\/>/g, '\t').replace(/<w:br[^>]*\/>/g, '\n').replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '').replace(/\s*\n?\u0001/g, ' | ').replace(/\s*\|\s*\u0002/g, '\n').replace(/[\u0001\u0002]/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+      }
+      p += 46 + nl + el + cl;
+    }
+    throw new Error('docx');
+  }
+  const t = await f.text();
+  if (/\.html?$/.test(n)) return t.replace(/<(script|style)[\s\S]*?<\/\1>/gi, '').replace(/<\/t[dh]>\s*(?=<t[dh])/gi, ' | ').replace(/<br\s*\/?>|<\/(p|div|h\d|li|tr)>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+  return t;
+}
+async function dcArchivo(inp) {
+  const f = inp && inp.files && inp.files[0], msg = document.getElementById('dc-msg'), x = document.getElementById('dc-x'); if (!f || !x) return;
+  if (/\.pdf$/i.test(f.name)) { if (msg) msg.textContent = ' Los PDF no se pueden leer aquí: ábrelo, selecciona el texto, cópialo (Ctrl+C) y pégalo en el cuadro.'; inp.value = ''; return; }
+  try {
+    let t = await dcTextoDeArchivo(f); if (!t.trim()) throw new Error('vacío');
+    const larga = t.length > 60000; t = t.slice(0, 60000);
+    x.value = (x.value.trim() ? x.value.replace(/\s+$/, '') + '\n\n' : '') + t;
+    const ti = document.getElementById('dc-t'); if (ti && !ti.value.trim()) ti.value = f.name.replace(/\.[^.]+$/, '').slice(0, 160);
+    if (msg) msg.textContent = ' ✅ Cargado: ' + f.name + (larga ? ' (se cortó a 60.000 caracteres)' : '');
+  } catch (e) { if (msg) msg.textContent = ' ⚠️ No pude leer ese archivo. Ábrelo, copia el texto (Ctrl+C) y pégalo aquí.'; }
+  inp.value = '';
 }
 function dcGuardar(mid, id) {
   const m = modPorId(mid); if (!m) return;
