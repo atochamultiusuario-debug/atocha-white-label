@@ -993,6 +993,7 @@ body.visor-on { background: var(--gray-100); }
 @media (max-width:760px) { .an-dos { grid-template-columns:1fr; } }
 #an-body .chart, .an-card .chart { max-width:640px; display:block; } #an-body .chart .ch-l, .an-card .chart .ch-l { font-size:12px; } #an-body .chart .ch-v, .an-card .chart .ch-v { font-size:12.5px; }
 .cpv-tareas { margin-bottom:14px; } .cpv-chips { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 8px; } .cpv-chips span { background:var(--gray-100); border-radius:999px; padding:4px 11px; font-size:13px; color:var(--gray-600); } .cpv-chips span b { color:var(--gray-900); } .cpv-chips span.rojo { background:#FEE2E2; color:#991B1B; } .cpv-chips span.rojo b { color:#991B1B; } .cpv-li.atr em { color:#B91C1C; font-weight:700; }
+.emb-vacias { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 10px; }
 </style>
 <body>
 
@@ -1130,7 +1131,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 4-nov · embudo sin Diseño ni Arranque, vendedor arranca en Prospecto</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 5-nov · Embudo oculta etapas vacías</div>
     </div>
   </nav>
 
@@ -3722,7 +3723,7 @@ const EMB_SERVICES = ['Trabajo virtual', 'Marketing', 'Apps'];
 const EMB_DIAS_ALERTA = 7;    // amarillo desde 7 días sin novedad
 const EMB_DIAS_ROJO = 14;     // rojo desde 14
 const EMB_ETAPAS_ALERTA = ['prospecto', 'contactado', 'reunion', 'propuesta', 'negociacion'];
-let embFiltroResp = '', embSoloAlerta = false, embFiltroProy = '';
+let embFiltroResp = '', embSoloAlerta = false, embFiltroProy = '', embVerVacias = false;
 const EMB_STAGES = [
   { id: 'prospecto',  name: 'Prospecto',      color: '#6B7280', guide: 'Identificar al decisor y su contacto.' },
   { id: 'contactado', name: 'Contactado',     color: '#3B82F6', guide: 'Primer mensaje enviado.' },
@@ -3907,7 +3908,9 @@ function renderEmbudo() {
     <div class="stat-card"><div class="stat-label">En el embudo</div><div class="stat-value">${fmtCOP(embudo)}</div><div class="stat-sub">por mes, si cierran todos</div></div>
   </div>`;
 
+  const hayAlguien = EMB_STAGES.some(s => by[s.id].length), ocultas = hayAlguien && !embVerVacias;
   const cols = EMB_STAGES.map((s, idx) => {
+    if (ocultas && !by[s.id].length) return '';
     const items = by[s.id].slice().sort((a, b) =>
       (Number(b.mensualidad) || 0) - (Number(a.mensualidad) || 0) || String(a.nombre).localeCompare(String(b.nombre), 'es'));
     const suma = items.reduce((t, p) => t + (Number(p.mensualidad) || 0), 0);
@@ -3941,7 +3944,9 @@ function renderEmbudo() {
       </select></label>` : ''}
     ${conAlerta.length ? `<button class="edit-btn${embSoloAlerta ? ' on' : ''}" type="button" onclick="embToggleAlerta()">⏱ ${conAlerta.length} ${conAlerta.length === 1 ? 'empresa lleva' : 'empresas llevan'} ${embDiasA()}+ días sin novedad${embSoloAlerta ? ' · quitar filtro' : ' · ver solo ' + (conAlerta.length === 1 ? 'esa' : 'esas')}</button>` : ''}
   </div>` : '';
-  document.getElementById('page-content').innerHTML = header + stats + filtros + `<div class="emb-board">${cols}</div>`;
+  const nVacias = hayAlguien ? EMB_STAGES.filter(s => !by[s.id].length).length : 0;
+  const barraVacias = nVacias ? `<div class="emb-vacias"><button type="button" class="edit-btn" onclick="embVerVacias=!embVerVacias;renderEmbudo()">${embVerVacias ? 'Ocultar las etapas vacías' : 'Mostrar ' + nVacias + (nVacias === 1 ? ' etapa vacía' : ' etapas vacías')}</button><span class="so-sub">${embVerVacias ? '' : 'Pasar de etapa con el botón de cada tarjeta sigue funcionando.'}</span></div>` : '';
+  document.getElementById('page-content').innerHTML = header + stats + filtros + barraVacias + `<div class="emb-board">${cols}</div>`;
   const nuevo = document.querySelector('.emb-board');
   if (nuevo && izq) nuevo.scrollLeft = izq;   // el tablero no vuelve al inicio al guardar algo
 }
