@@ -1123,7 +1123,7 @@ body.visor-on { background: var(--gray-100); }
       <div class="nav-item" onclick="toggleDark()" id="nav-dark"><span class="ni" data-i="moon"></span><span class="nn">Modo Oscuro</span></div>
       <div class="nav-item" onclick="authSalir()" id="nav-salir" style="display:none"><span class="ni" data-i="exit"></span><span class="nn">Cerrar sesión</span></div>
       <div class="nav-item" onclick="goPage('config')" id="nav-config"><span class="ni" data-i="gear"></span><span class="nn">Configuración</span></div>
-      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 3-nov · formularios no se cierran solos</div>
+      <div class="build-tag" title="Versión de Atocha cargada en este momento">Versión 4-nov · orden por fecha y estrellas</div>
     </div>
   </nav>
 
@@ -1332,7 +1332,7 @@ function lsTareas() {
     return { x, id: x.o.id, num: x.o.num || '', m, proyTxt: m ? modTxt(m) : (x.kind === 'emb' ? 'Embudo · ' + x.dueno.nombre : 'Checklist Maestro'),
       nombre: tkX.nombre(x) || '', creada: x.o.creada || '', fecha: tkX.fecha(x) || '', est: lsEstadoTarea(x), imp: impN(x.o) };
   });
-  return filas.sort((a, b) => (a.m ? modNum(a.m) : 2e9) - (b.m ? modNum(b.m) : 2e9) || String(a.num).localeCompare(String(b.num)));
+  return filas.sort((a, b) => (a.x.o.done || a.x.o.hecha ? 1 : 0) - (b.x.o.done || b.x.o.hecha ? 1 : 0) || String(a.fecha || '9999-99-99').localeCompare(String(b.fecha || '9999-99-99')) || b.imp - a.imp || String(a.num).localeCompare(String(b.num)));
 }
 function lsFiltrar(l, esT) {
   const q = normTxt(lsF.q);
@@ -1600,7 +1600,7 @@ const APP_CONFIG = {
   supabaseUrl: 'https://dswmwnnmtjvdzgyhscdv.supabase.co',
   anonKey: 'sb_publishable__CTEfCmCR5T8nhIG7XArVw_7yk53rcP',
   googleLogin: true,
-  contacto: ''          // correo de contacto para temas de privacidad (se muestra en "Cómo cuidamos tus datos")
+  contacto: 'atocha.app@gmail.com'          // correo de contacto para temas de privacidad (se muestra en "Cómo cuidamos tus datos")
 };
 const DEFAULT_SUPABASE = { url: APP_CONFIG.supabaseUrl, key: APP_CONFIG.anonKey };
 const AUTH_ON = !!APP_CONFIG.googleLogin;
@@ -2688,7 +2688,7 @@ function tkDeMod(m) {
   return (m.tasks || []).map(t => ({ ...t, name: escHtml(t.name), projectName: escHtml(modTxt(m)), projectId: m.id }));
 }
 function tkOrden(lista) {
-  return lista.slice().sort((x, y) => (x.done - y.done) || (x.date || '9999').localeCompare(y.date || '9999') || impN(y) - impN(x));
+  return lista.slice().sort((x, y) => (x.done - y.done) || tkCmp(x, y));
 }
 const tkListas = {}, tkRefresco = {};
 function tkRegistrar(ctx, lista, fn) { tkListas[ctx] = lista.map(t => ({ pid: t.projectId, id: t.id })); tkRefresco[ctx] = fn; }
@@ -2848,8 +2848,8 @@ function dashTareasLista(clave) {
   const hoy = embToday(), hoyD = hoyLocal(), all = getAllTasks();
   let titulo, lista;
   if (clave === 'cump') { titulo = '✅ Tareas cumplidas'; lista = all.filter(t => t.done).sort((x, y) => (y.doneDate || '').localeCompare(x.doneDate || '')); }
-  else if (clave === 'venc') { titulo = '🔴 Tareas vencidas'; lista = all.filter(t => !t.done && t.date && t.date < hoy).sort((x, y) => x.date.localeCompare(y.date)); }
-  else { titulo = 'Tareas pendientes'; lista = all.filter(t => !t.done).sort((x, y) => (x.date || '9999').localeCompare(y.date || '9999')); }
+  else if (clave === 'venc') { titulo = '🔴 Tareas vencidas'; lista = all.filter(t => !t.done && t.date && t.date < hoy).sort(tkCmp); }
+  else { titulo = 'Tareas pendientes'; lista = all.filter(t => !t.done).sort(tkCmp); }
   tkRegistrar('dash', lista, () => dashAbrir(clave));
   setModal(`<h3>${titulo} <span style="color:var(--gray-400);font-weight:600">(${lista.length})</span></h3>
     ${lista.length ? lista.map((t, n) => tkFila('dash', t, n, hoyD)).join('') : '<div class="empty-panel">Sin tareas</div>'}
@@ -2859,9 +2859,9 @@ function dashTareasLista(clave) {
 // ── 📅 Tareas de hoy: todo lo del día en una sola ventana ──
 function dashHoy() {
   const hoy = embToday(), hoyD = hoyLocal(), all = getAllTasks();
-  const porFecha = (a, b) => (a.date || '').localeCompare(b.date || '');
+  const porFecha = tkCmp;
   const venc = all.filter(t => !t.done && t.date && t.date < hoy).sort(porFecha);
-  const paraHoy = all.filter(t => !t.done && t.date === hoy);
+  const paraHoy = all.filter(t => !t.done && t.date === hoy).sort(tkCmp);
   const hechas = all.filter(t => t.done && t.doneDate === hoy);
   const prox = all.filter(t => !t.done && t.date > hoy && t.date <= fechaMasDias(3)).sort(porFecha);
   const ingHoy = ingList().filter(i => i.fecha === hoy);
@@ -3628,8 +3628,7 @@ function embMigrar(p) {
 // Actividades sin hacer, la más próxima primero; las que no tienen fecha van al final.
 function embPendientes(p) {
   return (p.actividades || []).filter(a => !a.hecha).sort((a, b) => {
-    const fa = a.fecha || '9999-99-99', fb = b.fecha || '9999-99-99';
-    return fa < fb ? -1 : fa > fb ? 1 : 0;
+    return tkCmp(a, b);
   });
 }
 function embFechaHora(iso) {
@@ -5792,7 +5791,7 @@ function cpVisorRender() {
   const feed = [];
   pros.forEach(p => (p.bi || []).forEach(b => feed.push({ p, b })));
   feed.sort((a, b) => (a.b.f < b.b.f ? 1 : -1));
-  const tareas = (d.tareas || []).slice().sort((a, b) => (a.h - b.h) || ((a.f || '9999') < (b.f || '9999') ? -1 : 1));
+  const tareas = (d.tareas || []).slice().sort((a, b) => (a.h - b.h) || (String(a.f || '9999').localeCompare(String(b.f || '9999')) || (b.i || 0) - (a.i || 0)));
   v.innerHTML = `<div class="cpv-top"><div><span class="cpv-badge">👁 Vista de invitado · solo lectura</span><h1>${escHtml(nom)}</h1>
       ${d.proy.sit ? `<div class="cpv-sit"><span class="sit sit-${embAttr(d.proy.sit)}">${escHtml(SIT_T[d.proy.sit] || '')}</span><span class="prg prg-${embAttr(d.proy.prog)}">${escHtml(PROG_T[d.proy.prog] || '')}</span>${d.proy.causa ? `<small>${escHtml(d.proy.causa)}</small>` : ''}</div>` : ''}
       <small>${escHtml(d.emp || '')}${d.emp ? ' · ' : ''}Actualizado ${escHtml(cpFH(d.actualizado))}</small></div>
@@ -7577,6 +7576,10 @@ function renderPlan() {
 }
 
 // ── Importancia de cada tarea: de 1 a 5 estrellas, justo después del código ──
+// Orden único de tareas pendientes en toda la app: por fecha (sin fecha al final), dentro de la fecha más estrellas primero, luego la hora.
+function tkCmp(a, b) {
+  return String(a.date || a.fecha || '9999-99-99').localeCompare(String(b.date || b.fecha || '9999-99-99')) || impN(b.o && !('imp' in b) ? b.o : b) - impN(a.o && !('imp' in a) ? a.o : a) || String(a.hora || '99:99').localeCompare(String(b.hora || '99:99'));
+}
 function impN(t) { const n = Math.round(Number(t && t.imp) || 0); return n < 0 ? 0 : n > 5 ? 5 : n; }
 function impHtml(t) {
   if (!t || !t.id) return '';
@@ -7772,7 +7775,7 @@ function parteDatos(tipo, ref) {
   const todas = tkTodas().map(x => ({ x, num: x.o.num || '', nombre: tkX.nombre(x), proy: x.proy, fecha: tkX.fecha(x), hecha: tkX.hecha(x), fh: tkX.fechaHecha(x), creada: x.o.creada || '' }));
   const cumplidas = todas.filter(t => t.hecha && en(t.fh)).sort((p, q) => (p.fh + p.num).localeCompare(q.fh + q.num));
   const creadas = todas.filter(t => en(t.creada));
-  const pendientes = todas.filter(t => !t.hecha && t.fecha && t.fecha <= b).sort((p, q) => p.fecha.localeCompare(q.fecha));
+  const pendientes = todas.filter(t => !t.hecha && t.fecha && t.fecha <= b).sort((p, q) => p.fecha.localeCompare(q.fecha) || impN(q.x.o) - impN(p.x.o));
   const venc = pendientes.filter(t => t.fecha < a);
   const nov = [];
   embList().forEach(p => (p.bitacora || []).forEach(n => { const f = isoALocal(n.fecha); if (en(f)) nov.push({ f, iso: n.fecha, empresa: p.nombre, texto: n.texto, contacto: !!n.contacto }); }));
